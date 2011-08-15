@@ -1,0 +1,16 @@
+<?php
+// Default configuration
+$GLOBALS['site_info'] = array(
+   // Database name
+   'database'    => 'tabt',
+   // Main application path
+   'path'        => './',
+   // Database information
+   'db_hostname' => 'localhost',
+   'db_name'     => 'tabtdb',
+   'db_user'     => 'tabtuser',
+   'db_password' => 'tabtpass',
+   // Default season
+   'season'          => 12,
+);
+?>

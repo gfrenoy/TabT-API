@@ -1,0 +1,443 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- TabT API (http://api.frenoy.net/TabT) v#VERSION# (#DATE#) for database "#DATABASE#"
+     Copyright 2007-2011, Gaëtan Frenoy <gaetan@frenoy.net> -->
+<wsdl:definitions
+  targetNamespace="http://api.frenoy.net/TabTAPI"
+  xmlns:tns="http://api.frenoy.net/TabTAPI"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://api.frenoy.net/TabTAPI" version="1.0">
+
+      <!-- Requests -->
+      <xsd:element name="TestRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetSeasonsRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetClubTeamsRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType" />
+            <xsd:element name="Club" minOccurs="1" maxOccurs="1" type="xsd:string" />
+            <xsd:element name="Season" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetDivisionRankingRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+            <xsd:element name="DivisionId" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="WeekName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="RankingSystem" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetMatchesRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+            <xsd:element name="DivisionId" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="Team" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="DivisionCategory" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="Season" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+            <xsd:element name="WeekName" minOccurs="0" maxOccurs="1" type="xsd:string" />
+            <xsd:element name="Level" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+            <xsd:element name="ShowDivisionName" minOccurs="0" maxOccurs="1" type="tns:ShowDivisionNameType" />
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetMembersRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+            <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="Season" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="PlayerCategory" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="UniqueIndex" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="NameSearch" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="ExtendedInformation" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
+            <xsd:element name="RankingPointsInformation" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="UploadRequest">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="1" maxOccurs="1" type="tns:CredentialsType"/>
+            <xsd:element name="Data" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetClubs">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
+            <xsd:element name="Season" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+            <xsd:element name="ClubCategory" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- Responses -->
+      <xsd:element name="TestResponse">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Timestamp" minOccurs="1" maxOccurs="1" type="xsd:dateTime"/>
+            <xsd:element name="ApiVersion" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="IsValidAccount" minOccurs="1" maxOccurs="1" type="xsd:boolean"/>
+            <xsd:element name="Language" minOccurs="1" maxOccurs="1" type="tns:SupportedLanguages"/>
+            <xsd:element name="Database" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetSeasonsResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="CurrentSeason" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="CurrentSeasonName" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="SeasonEntries" minOccurs="1" maxOccurs="unbounded" type="tns:SeasonEntryType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetClubTeamsResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="ClubName" type="xsd:string"/>
+            <xsd:element name="TeamCount" type="xsd:integer"/>
+            <xsd:element name="TeamEntries" minOccurs="0" maxOccurs="unbounded" type="tns:TeamEntryType" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetDivisionRankingResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="DivisionName" type="xsd:string"/>
+            <xsd:element name="RankingEntries" minOccurs="1" maxOccurs="unbounded" type="tns:RankingEntryType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetMatchesResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="MatchCount" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="TeamMatchesEntries" minOccurs="1" maxOccurs="unbounded" type="tns:TeamMatchEntryType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetMembersResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="MemberCount" type="xsd:integer"/>
+            <xsd:element name="MemberEntries" minOccurs="1" maxOccurs="unbounded" type="tns:MemberEntryType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="UploadResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Result" type="xsd:boolean"/>
+            <xsd:element name="ErrorLines" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetClubsResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="ClubCount" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="ClubEntries" minOccurs="1" maxOccurs="unbounded" type="tns:ClubEntryType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- Types -->
+      <xsd:complexType name="CredentialsType" nillable="false">
+        <xsd:all>
+          <xsd:element name="Account" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Password" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="SeasonEntryType" nillable="false">
+        <xsd:all>
+          <xsd:element name="Season" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="Name" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="IsCurrent" minOccurs="1" maxOccurs="1" type="xsd:boolean"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="TeamEntryType">
+        <xsd:all>
+          <xsd:element name="TeamId" type="xsd:string" />
+          <xsd:element name="Team" type="xsd:string" />
+          <xsd:element name="DivisionId" type="xsd:integer" />
+          <xsd:element name="DivisionName" type="xsd:string"/>
+          <xsd:element name="DivisionCategory" type="xsd:integer"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="RankingEntryType">
+        <xsd:all>
+          <xsd:element name="Position" type="xsd:integer"/>
+          <xsd:element name="Team" type="xsd:string"/>
+          <xsd:element name="GamesPlayed" type="xsd:integer"/>
+          <xsd:element name="GamesWon" type="xsd:integer"/>
+          <xsd:element name="GamesLost" type="xsd:integer"/>
+          <xsd:element name="GamesDraw" type="xsd:integer"/>
+          <xsd:element name="IndividualMatchesWon" type="xsd:integer"/>
+          <xsd:element name="IndividualMatchesLost" type="xsd:integer"/>
+          <xsd:element name="IndividualSetsWon" type="xsd:integer"/>
+          <xsd:element name="IndividualSetsLost" type="xsd:integer"/>
+          <xsd:element name="Points" type="xsd:integer"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="TeamMatchEntryType">
+        <xsd:all>
+          <xsd:element name="DivisionName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="MatchId" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="WeekName" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Date" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+          <xsd:element name="Time" minOccurs="0" maxOccurs="1" type="xsd:time"/>
+          <xsd:element name="Venue" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="HomeClub" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="HomeTeam" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="AwayClub" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="AwayTeam" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Score" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="MatchUniqueId" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="MemberEntryType">
+        <xsd:sequence>
+          <xsd:element name="Position" type="xsd:integer"/>
+          <xsd:element name="UniqueIndex" type="xsd:integer"/>
+          <xsd:element name="RankingIndex" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="FirstName" type="xsd:string"/>
+          <xsd:element name="LastName" type="xsd:string"/>
+          <xsd:element name="Ranking" type="xsd:string"/>
+          <xsd:element name="Status" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Gender" minOccurs="0" maxOccurs="1" type="tns:GenderType"/>
+          <xsd:element name="Category" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="BirthDate" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+          <xsd:element name="MedicalAttestation" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
+          <xsd:element name="RankingPointsCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="RankingPointsEntries" minOccurs="0" maxOccurs="unbounded" type="tns:RankingPointEntryType"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:simpleType name="SupportedLanguages">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="en"/>
+          <xsd:enumeration value="fr"/>
+          <xsd:enumeration value="nl"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="ShowDivisionNameType">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="no"/>
+          <xsd:enumeration value="yes"/>
+          <xsd:enumeration value="short"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:complexType name="ClubEntryType">
+        <xsd:sequence>
+          <xsd:element name="UniqueIndex" type="xsd:string"/>
+          <xsd:element name="Name" type="xsd:string"/>
+          <xsd:element name="LongName" type="xsd:string"/>
+          <xsd:element name="Category" type="xsd:integer"/>
+          <xsd:element name="CategoryName" type="xsd:string"/>
+          <xsd:element name="VenueCount" type="xsd:integer"/>
+          <xsd:element name="VenueEntries" minOccurs="0" maxOccurs="unbounded" type="tns:VenueEntryType"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="VenueEntryType">
+        <xsd:all>
+          <xsd:element name="Id" type="xsd:integer"/>
+          <xsd:element name="ClubVenue" type="xsd:integer"/>
+          <xsd:element name="Name" type="xsd:string"/>
+          <xsd:element name="Street" type="xsd:string"/>
+          <xsd:element name="Town" type="xsd:string"/>
+          <xsd:element name="Phone" type="xsd:string"/>
+          <xsd:element name="Comment" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:simpleType name="GenderType">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="M"/>
+          <xsd:enumeration value="F"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:complexType name="RankingPointEntryType">
+        <xsd:all>
+          <xsd:element name="MethodName" type="xsd:string"/>
+          <xsd:element name="Points" type="xsd:integer"/>
+        </xsd:all>
+      </xsd:complexType>
+
+    </xsd:schema>
+  </wsdl:types>
+
+  <!-- Messages -->
+  <wsdl:message name="Test_Request">
+    <wsdl:part name="body" element="tns:TestRequest"/>
+  </wsdl:message>
+  <wsdl:message name="Test_Response">
+    <wsdl:part name="body" element="tns:TestResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetSeasons_Request">
+    <wsdl:part name="body" element="tns:GetSeasonsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetSeasons_Response">
+    <wsdl:part name="body" element="tns:GetSeasonsResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetClubTeams_Request">
+    <wsdl:part name="body" element="tns:GetClubTeamsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetClubTeams_Response">
+    <wsdl:part name="body" element="tns:GetClubTeamsResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetDivisionRanking_Request">
+    <wsdl:part name="body" element="tns:GetDivisionRankingRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetDivisionRanking_Response">
+    <wsdl:part name="body" element="tns:GetDivisionRankingResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetMatches_Request">
+    <wsdl:part name="body" element="tns:GetMatchesRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetMatches_Response">
+    <wsdl:part name="body" element="tns:GetMatchesResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetMembers_Request">
+    <wsdl:part name="body" element="tns:GetMembersRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetMembers_Response">
+    <wsdl:part name="body" element="tns:GetMembersResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="Upload_Request">
+    <wsdl:part name="body" element="tns:UploadRequest"/>
+  </wsdl:message>
+  <wsdl:message name="Upload_Response">
+    <wsdl:part name="body" element="tns:UploadResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="GetClubs_Request">
+    <wsdl:part name="body" element="tns:GetClubs"/>
+  </wsdl:message>
+  <wsdl:message name="GetClubs_Response">
+    <wsdl:part name="body" element="tns:GetClubsResponse"/>
+  </wsdl:message>
+
+  <wsdl:portType name="TabTAPI_PortType">
+    <wsdl:operation name="Test">
+      <wsdl:input message="tns:Test_Request"/>
+      <wsdl:output message="tns:Test_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetSeasons">
+      <wsdl:input message="tns:GetSeasons_Request"/>
+      <wsdl:output message="tns:GetSeasons_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetClubTeams">
+      <wsdl:input message="tns:GetClubTeams_Request"/>
+      <wsdl:output message="tns:GetClubTeams_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetDivisionRanking">
+      <wsdl:input message="tns:GetDivisionRanking_Request"/>
+      <wsdl:output message="tns:GetDivisionRanking_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetMatches">
+      <wsdl:input message="tns:GetMatches_Request"/>
+      <wsdl:output message="tns:GetMatches_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetMembers">
+      <wsdl:input message="tns:GetMembers_Request"/>
+      <wsdl:output message="tns:GetMembers_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="Upload">
+      <wsdl:input message="tns:Upload_Request"/>
+      <wsdl:output message="tns:Upload_Response"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetClubs">
+      <wsdl:input message="tns:GetClubs_Request"/>
+      <wsdl:output message="tns:GetClubs_Response"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="TabTAPI_Binding" type="tns:TabTAPI_PortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <wsdl:operation name="Test">
+      <soap:operation soapAction="Test"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetSeasons">
+      <soap:operation soapAction="GetSeasons"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetClubTeams">
+      <soap:operation soapAction="GetClubTeams"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetDivisionRanking">
+      <soap:operation soapAction="GetDivisionRanking"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetMatches">
+      <soap:operation soapAction="GetMatches"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetMembers">
+      <soap:operation soapAction="GetMembers"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="Upload">
+      <soap:operation soapAction="Upload"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="GetClubs">
+      <soap:operation soapAction="GetClubs"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+
+  <wsdl:service name="TabTAPI_Service">
+    <wsdl:port name="TabTAPI_Port" binding="tns:TabTAPI_Binding">
+      <soap:address location='#URL#'/>
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>
