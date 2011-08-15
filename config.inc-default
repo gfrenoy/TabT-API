@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Default configuration
 $GLOBALS['site_info'] = array(
    // Database name

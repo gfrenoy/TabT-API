@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /****************************************************************************
  * TabT API
  *  A programming interface to access information managed
@@ -8,7 +8,7 @@
  * -----------------------------------------------------------------
  * @version 0.7.7
  * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Ga�tan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
  * -----------------------------------------------------------------
  * This file is part of TabT API
  *

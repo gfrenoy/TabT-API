@@ -1,4 +1,4 @@
-<?php
+ï»¿<?php
 /** \internal
  ****************************************************************************
  * TabT API
@@ -9,7 +9,7 @@
  * -----------------------------------------------------------------
  * @version 0.7.7
  * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2011 GaÃ«tan Frenoy (gaetan@frenoy.net)
  * -----------------------------------------------------------------
  * This file is part of TabT API
  *
@@ -81,7 +81,7 @@ if (!include_once('tabtapi_types.php')) {
  * @param[in] $Request TestRequest
  * @return TestResponse
  * @see TestRequest, TestResponse
- * @author Gaëtan Frenoy <gaetan@frenoy.net>
+ * @author GaÃ«tan Frenoy <gaetan@frenoy.net>
  * @version 0.6
  * @ingroup TabTAPIfunctions
  */
@@ -648,7 +648,7 @@ EOQ;
  *  <li><code>7  | 505384 |  8 | MICHEL    | THAUVOYE   | C2</code></li>
  *  <li><code>8  | 505783 |  8 | PASCAL    | TIMMERMANS | C2</code></li>
  *  <li>(...)</li>
- *  <li><code>17 | 505290 | 20 | GAËTAN    | FRENOY     | C6</code></li>
+ *  <li><code>17 | 505290 | 20 | GAÃ‹TAN    | FRENOY     | C6</code></li>
  *  <li><code>18 | 505275 | 20 | CHRISTIAN | HOLTYZER   | C6</code></li>
  *  <li>(...)</li>
  * </ul>

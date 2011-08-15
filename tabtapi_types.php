@@ -1,4 +1,4 @@
-<?php
+ï»¿<?php
 /** \internal
  ****************************************************************************
  * TabT API
@@ -9,7 +9,7 @@
  * -----------------------------------------------------------------
  * @version 0.7.6
  * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2011 GaÃ«tan Frenoy (gaetan@frenoy.net)
  * -----------------------------------------------------------------
  * This file is part of TabT API
  *
@@ -32,7 +32,7 @@
  *
  * @brief Here are all types used by TabT API functions
  *
- * @author Gaëtan Frenoy <gaetan@frenoy.net>
+ * @author GaÃ«tan Frenoy <gaetan@frenoy.net>
  * @version 0.7.6
  */
 
@@ -383,7 +383,7 @@ class GetDivisionRankingRequest
    * The type of ranking system to use.
    *
    * The main systems are:
-   *  1 : Classic  (as described in "Landelijke Sportreglement at § C.7)
+   *  1 : Classic  (as described in "Landelijke Sportreglement at Â§ C.7)
    *  2 : Overloop 
    *  3 : 4-a-win
    *  4 : Per individual victory
@@ -647,7 +647,7 @@ class GetMembersResponse
    *
    * Each player is given a unique number, usually given by the federation he/she is belonging to.
    *
-   * Examples: <code>VTTL id of GAËTAN FRENOY is 505290</code>, <code>Sporcrea id of JOHAN DE KONINCK is 8196</code>.
+   * Examples: <code>VTTL id of GAÃ‹TAN FRENOY is 505290</code>, <code>Sporcrea id of JOHAN DE KONINCK is 8196</code>.
    *
    * @b type:  int
    */
