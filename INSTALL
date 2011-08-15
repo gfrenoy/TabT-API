@@ -34,7 +34,7 @@ Get the code
 ------------------
 
 $ cd /path/to/tabt
-$ git clone git@github.com:gfrenoy/TabT-API.git
+$ git clone git://github.com/gfrenoy/TabT-API.git
 
 
 ------------------
