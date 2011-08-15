@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /****************************************************************************
  * TabT API
  *  A programming interface to access information managed
@@ -34,22 +34,16 @@ if (!@include_once('config.inc')) {
   exit;
 }
 
-// TabT includes
-if (!@include_once($GLOBALS['site_info']['path'].'phplib/prepend.php'))
-{
-  print('TabT not correctly installed on server.');
-  exit;
-}
-
 // Some constants 
 define('WSDL_FILENAME', 'tabt.wsdl');
-define('TABTAPI_VERSION', '0.7.7');
+define('TABTAPI_VERSION', '0.8');
 
 // disabling WSDL cache (for test servers only)
 ini_set("soap.wsdl_cache_enabled", "0");
 
 if (!isset($GLOBALS['site_info']['api_url']) || '' == $GLOBALS['site_info']['api_url']) {
-  $GLOBALS['site_info']['api_url'] .= 'http'.($_SERVER['HTTPS']?'s':'')."://{$_SERVER['SERVER_NAME']}{$_SERVER['PHP_SELF']}?s={$GLOBALS['site_info']['database']}";
+  $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] ? 's' : '';
+  $GLOBALS['site_info']['api_url'] = "http{$protocol}://{$_SERVER['SERVER_NAME']}{$_SERVER['PHP_SELF']}?s={$GLOBALS['site_info']['database']}";
 }
 
 // User requests WSDL
@@ -70,19 +64,6 @@ if (isset($_GET['DOC']) || isset($_GET['doc'])) {
 
 // Specifiy default language
 $lang = 'nl';
-
-// Some general helper functions
-if (!@include_once($GLOBALS['site_info']['path'].'public/helpers.php'))
-{
-  print('TabT not correctly installed on server (helpers not found).');
-  exit;
-}
-// i18n
-if (!@include_once($GLOBALS['site_info']['path'].'public/localization.php'))
-{
-  print('TabT not correctly installed on server (i18n not found).');
-  exit;
-}
 
 // TabT API Includes
 if (!@include_once('tabtapi_helpers.php')) {

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /** \internal
  ****************************************************************************
  * TabT API
@@ -85,7 +85,7 @@ if (!include_once('tabtapi_types.php')) {
  * @version 0.6
  * @ingroup TabTAPIfunctions
  */
-function Test(TestRequest $Request) {
+function Test(stdClass $Request) {
   $Credentials = $Request->Credentials;
 
   $permissions = _GetPermissions($Credentials);
