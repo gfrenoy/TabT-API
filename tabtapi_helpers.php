@@ -7,7 +7,7 @@
  * -----------------------------------------------------------------
  * TabT API helper functions
  * -----------------------------------------------------------------
- * @version 0.7.7
+ * @version 0.8
  * -----------------------------------------------------------------
  * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
  * -----------------------------------------------------------------
@@ -32,18 +32,24 @@
  * Database abstraction class
  */
 class DB_Session {
-  var $dbh = null;
+  var $Record = array();
 
-  function __construct() {
+  var $dbh = null;
+  var $dbst = null;
+
+  function __construct($q) {
     $this->dbh = new PDO("mysql:host={$GLOBALS['site_info']['db_hostname']};dbname={$GLOBALS['site_info']['db_name']}", $GLOBALS['site_info']['db_user'], $GLOBALS['site_info']['db_password']);
+    if (isset($q)) {
+      $this->query($q);
+    }
   }
   
   function __destruct() {
-    $this->dbh = null;
+    $this->free();
   }
 
   public function query($q) {
-    return $this->dbh->query($q);
+    return $this->dbst = $this->dbh->query($q);
   }
 
   public function select_one($q) {
@@ -53,7 +59,15 @@ class DB_Session {
   public function select_one_array($q) {
     return $this->dbh->query($q)->fetch(PDO::FETCH_NUM);
   }
- 
+
+  public function next_record() {
+    return $this->Record = $this->dbst->fetch(PDO::FETCH_ASSOC);
+  }
+
+  public function free() {
+    $this->dbh = null;
+  }
+
 }
 
 function _GetPermissions($Credentials) {

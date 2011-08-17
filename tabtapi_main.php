@@ -65,6 +65,13 @@ if (isset($_GET['DOC']) || isset($_GET['doc'])) {
 // Specifiy default language
 $lang = 'nl';
 
+// Some general helper functions
+if (!@include_once($GLOBALS['site_info']['path'].'public/helpers.php'))
+{
+  print('TabT not correctly installed on server (helpers not found).');
+  exit;
+}
+
 // TabT API Includes
 if (!@include_once('tabtapi_helpers.php')) {
   print('TabT not correclty installed (error loading tabtapi_helpers)');

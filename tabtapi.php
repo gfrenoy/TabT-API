@@ -7,7 +7,7 @@
  * -----------------------------------------------------------------
  * TabT API main code
  * -----------------------------------------------------------------
- * @version 0.7.7
+ * @version 0.8
  * -----------------------------------------------------------------
  * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
  * -----------------------------------------------------------------
@@ -182,14 +182,17 @@ function GetClubTeams(GetClubTeamsRequest $Request) {
   // Check permissions
   $permissions = _GetPermissions($Credentials);
 
+  // Get database connection
+  $db = new DB_Session();
+  
   // Check season
   if (!isset($Season) || $Season=='') {
-    $Season = select_one("SELECT MAX(id) FROM seasoninfo;");
+    $Season = $db->select_one("SELECT MAX(id) FROM seasoninfo;");
   }
   if (!is_numeric($Season)) {
     throw new SoapFault('6', "Season [{$Season}] is not valid, must be numeric.");
   }
-  if (select_one("SELECT COUNT(*) FROM seasoninfo WHERE id={$Season}") == 0) {
+  if ($db->select_one("SELECT COUNT(*) FROM seasoninfo WHERE id={$Season}") == 0) {
     throw new SoapFault('7', "Season [{$Season}] is not valid.");
   }
 
@@ -199,7 +202,7 @@ function GetClubTeams(GetClubTeamsRequest $Request) {
     throw new SoapFault('17', "Club is not valid, cannot be empty.");
   }
     $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>{$Season})";
-  list($ClubId, $ClubName) = select_one_array($q);
+  list($ClubId, $ClubName) = $db->select_one_array($q);
   if (!is_numeric($ClubId) || $ClubId < 0) {
     throw new SoapFault('9', "Club [{$Club}] is not valid.");
   }
@@ -220,7 +223,7 @@ WHERE 1
 ORDER BY
   di.category ASC, dti.indice ASC
 EOQ;
-  $db = new DB_Session($q);
+  $db->query($q);
 
   $TeamEntries = array();
   
