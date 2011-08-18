@@ -123,7 +123,7 @@ function Test(stdClass $Request) {
  * @see CredentialsType, GetSeasonsResponse
  * @ingroup TabTAPIfunctions
  */
-function GetSeasons(CredentialsType $Credentials) {
+function GetSeasons(stdClass $Credentials) {
   $permissions = _GetPermissions($Credentials);
 
   $res = array();
@@ -173,7 +173,7 @@ function GetSeasons(CredentialsType $Credentials) {
  * @ingroup TabTAPIfunctions
  * @version 0.7.1
  */
-function GetClubTeams(GetClubTeamsRequest $Request) {
+function GetClubTeams(stdClass $Request) {
   // Extract function arguments
   $Credentials = $Request->Credentials;
   $Club        = trim($Request->Club);
@@ -269,7 +269,7 @@ EOQ;
  * @ingroup TabTAPIfunctions
  * @version 0.7.2
  */
-function GetDivisionRanking(GetDivisionRankingRequest $Request)
+function GetDivisionRanking(stdClass $Request)
 {
   // Extract function arguments
   $Credentials   = $Request->Credentials;
@@ -377,7 +377,7 @@ function GetDivisionRanking(GetDivisionRankingRequest $Request)
  * @see GetMatchesRequest, GetMatchesResponse
  * @ingroup TabTAPIfunctions
  */
-function GetMatches(GetMatchesRequest $Request)
+function GetMatches(stdClass $Request)
 {
   // Extract function arguments
   $Credentials      = $Request->Credentials;
@@ -666,7 +666,7 @@ EOQ;
  * @see GetMembersRequest, GetMembersResponse
  * @ingroup TabTAPIfunctions
  */
-function GetMembers(GetMembersRequest $Request)
+function GetMembers(stdClass $Request)
 {
   // Required helpers functions
   include_once($GLOBALS['site_info']['path'].'public/players_fct.php');
@@ -892,7 +892,7 @@ EOQ;
  * @since Version 0.6
  * @ingroup TabTAPIfunctions
  */
-function Upload(UploadRequest $Request)
+function Upload(stdClass $Request)
 {
   // Extract function arguments
   $Credentials     = $Request->Credentials;
@@ -944,7 +944,7 @@ function Upload(UploadRequest $Request)
  * @since Version 0.6
  * @version 0.7.6
  */
-function GetClubs(GetClubsRequest $Request)
+function GetClubs(stdClass $Request)
 {
   // Extract function arguments
   if (isset($Request->Credentials))  $Credentials     = $Request->Credentials;

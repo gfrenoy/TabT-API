@@ -3,8 +3,8 @@
 $GLOBALS['site_info'] = array(
    // Database name
    'database'    => 'tabt',
-   // Main application path
-   'path'        => './',
+   // Main TabT application path
+   'path'        => './tabt/',
    // Database information
    'db_hostname' => 'localhost',
    'db_name'     => 'tabtdb',
