@@ -1,18 +1,16 @@
 <?php
-/****************************************************************************
+/**
  * TabT API
- *  A programming interface to access information managed
- *  by TabT, the table tennis information manager.
- * -----------------------------------------------------------------
- * Main API entry point
- * -----------------------------------------------------------------
- * @version 0.8
- * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
- * -----------------------------------------------------------------
- * This file is part of TabT API
  *
- * TabT API is free software: you can redistribute it and/or modify
+ * A programming interface to access information managed
+ * by TabT, the table tennis information manager.
+ *
+ * @author Gaetan Frenoy <gaetan@frenoy.net>
+ * @version 0.7.21
+ *
+ * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
@@ -21,10 +19,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+
  * You should have received a copy of the GNU Affero General Public License
- * along with TabT API.  If not, see <http://www.gnu.org/licenses/>.
- **************************************************************************/
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -34,16 +32,23 @@ if (!@include_once('config.inc')) {
   exit;
 }
 
+// Check we have the required information to start
+if (!isset($GLOBALS['site_info']['database'])) {
+  // No, try to load some more config from WWW application
+  @include_once($GLOBALS['site_info']['path'].'config.inc');
+}
+
 // Some constants 
 define('WSDL_FILENAME', 'tabt.wsdl');
-define('TABTAPI_VERSION', '0.8');
+define('TABTAPI_VERSION', '0.7.21');
 
 // disabling WSDL cache (for test servers only)
-ini_set("soap.wsdl_cache_enabled", "0");
+// ini_set("soap.wsdl_cache_enabled", "0");
 
 if (!isset($GLOBALS['site_info']['api_url']) || '' == $GLOBALS['site_info']['api_url']) {
   $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] ? 's' : '';
-  $GLOBALS['site_info']['api_url'] = "http{$protocol}://{$_SERVER['SERVER_NAME']}{$_SERVER['PHP_SELF']}?s={$GLOBALS['site_info']['database']}";
+  $port = (!isset($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 80) || (isset($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) ? '' : ":{$_SERVER['SERVER_PORT']}";
+  $GLOBALS['site_info']['api_url'] = "http{$protocol}://{$_SERVER['SERVER_NAME']}{$port}{$_SERVER['PHP_SELF']}?s={$GLOBALS['site_info']['database']}";
 }
 
 // User requests WSDL
@@ -63,14 +68,27 @@ if (isset($_GET['DOC']) || isset($_GET['doc'])) {
 }
 
 // Specifiy default language
-$lang = 'nl';
+$lang = isset($GLOBALS['site_info']['default_language']) ? $GLOBALS['site_info']['default_language'] : 'nl';
 
+// Main library
+if (!@include_once($GLOBALS['site_info']['path'].'public/prepend.php'))
+{
+  print('TabT not correctly installed on server (library not found).');
+  exit;
+}
 // Some general helper functions
 if (!@include_once($GLOBALS['site_info']['path'].'public/helpers.php'))
 {
   print('TabT not correctly installed on server (helpers not found).');
   exit;
 }
+// i18n
+if (!@include_once($GLOBALS['site_info']['path'].'public/localization.php'))
+{
+  print('TabT not correctly installed on server (i18n not found).');
+  exit;
+}
+dict_compute();
 
 // TabT API Includes
 if (!@include_once('tabtapi_helpers.php')) {
@@ -80,16 +98,31 @@ if (!include_once('tabtapi.php')) {
   print('TabT not correclty installed (error loading tabtapi_helpers)');
 }
 
+// Set headers to all cross-domain
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: SOAPAction, Content-Type');
+
+/// If anything else than a POST request (like OPTIONS), nothing to do anymore
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  exit;
+}
+
 // Dispatch calls
 $server = new SoapServer(WSDL_FILENAME);
 $server->addFunction(SOAP_FUNCTIONS_ALL);
 try
 {
+  _BeginAPI();
   $server->handle();
+  _EndAPI();
 }
 catch (Exception $e)
 {
   throw new SoapFault('22', "Unexpected database error [{$e->getMessage()}].");
 }
+
+////////////////////////////////////////////////////////////////////////////
+// $Id: $
+////////////////////////////////////////////////////////////////////////////
 
 ?>

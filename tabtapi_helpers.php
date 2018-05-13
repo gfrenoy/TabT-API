@@ -1,19 +1,16 @@
 <?php
-/** \internal
- ****************************************************************************
+/**
  * TabT API
- *  A programming interface to access information managed
- *  by TabT, the table tennis information manager.
- * -----------------------------------------------------------------
- * TabT API helper functions
- * -----------------------------------------------------------------
- * @version 0.8
- * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
- * -----------------------------------------------------------------
- * This file is part of TabT API
  *
- * TabT API is free software: you can redistribute it and/or modify
+ * A programming interface to access information managed
+ * by TabT, the table tennis information manager.
+ *
+ * @author Gaetan Frenoy <gaetan@frenoy.net>
+ * @version 0.7.20
+ *
+ * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
@@ -22,88 +19,214 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+
  * You should have received a copy of the GNU Affero General Public License
- * along with TabT API.  If not, see <http://www.gnu.org/licenses/>.
- **************************************************************************/
-
-
-/**
- * Database abstraction class
- */
-class DB_Session {
-  var $Record = array();
-
-  var $dbh = null;
-  var $dbst = null;
-
-  function __construct($q) {
-    $this->dbh = new PDO("mysql:host={$GLOBALS['site_info']['db_hostname']};dbname={$GLOBALS['site_info']['db_name']}", $GLOBALS['site_info']['db_user'], $GLOBALS['site_info']['db_password']);
-    if (isset($q)) {
-      $this->query($q);
-    }
-  }
-  
-  function __destruct() {
-    $this->free();
-  }
-
-  public function query($q) {
-    return $this->dbst = $this->dbh->query($q);
-  }
-
-  public function select_one($q) {
-    return $this->dbh->query($q)->fetchColumn(0);
-  }
-
-  public function select_one_array($q) {
-    return $this->dbh->query($q)->fetch(PDO::FETCH_NUM);
-  }
-
-  public function next_record() {
-    return $this->Record = $this->dbst->fetch(PDO::FETCH_ASSOC);
-  }
-
-  public function free() {
-    $this->dbh = null;
-  }
-
-}
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 function _GetPermissions($Credentials) {
-  // Get database connection
+  // Establish a dummy connection to make sure "mysql_real_escape_string" works as expected
   $db = new DB_Session();
-
-  // Get credentials (if any)
-  $Account  = isset($Credentials->Account) ? utf8_decode(addslashes($Credentials->Account)) : '';
+  $db->query('SELECT COUNT(*) FROM auth_user');
+  $Account  = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account) : '';
+  $Password = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password) : '';
   if ($Account != '') {
-    $Password = isset($Credentials->Password) ? utf8_decode(addslashes($Credentials->Password)) : '';
     $q = "SELECT a.perms, s.sid, a.player_id, pc.club_id FROM auth_user as a LEFT JOIN active_sessions s ON s.sid=a.user_id LEFT JOIN playerclub pc ON a.player_id=pc.player_id WHERE a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id) ORDER BY pc.season DESC; ";
     list($permissions, $session_id, $player_id, $club_id) = $db->select_one_array($q);
   }
+  unset($db);
 
   // If valid account, try to retrieve the preferred language of
   // the connected user
   if (isset($permissions) && is_string($permissions)) {
-    $val = base64_decode($db->select_one("SELECT val FROM active_sessions WHERE name='HurriUser' AND sid='{$session_id}'"));
-    if (preg_match("#\\\$GLOBALS\['lang'\] *= *'([a-zA-Z]+)';#", $val, $m)) {
+    $session_access = new DB_CT_Sql();
+    $session_access->ac_start();
+    if (preg_match("#\\\$GLOBALS\['lang'\] *= *'([a-zA-Z]+)';#",
+                   $session_access->ac_get_value($session_id, 'HurriUser'), $m)) {
       if ($GLOBALS['lang'] != $m[1]) {
         $GLOBALS['lang'] = $m[1];
         include($GLOBALS['site_info']['path'].'public/localization.php');
+        dict_compute();
       }
     }
     unset($session_access);
 
     // Create dummy "Perm" object for TabT functions that are using it
     if (is_string($permissions)) {
-      $GLOBALS['perm'] = new stdClass();
-      $GLOBALS['auth'] = new stdClass();
+      $GLOBALS['perm'] = new HurriPerm();
+      $GLOBALS['auth'] = new Auth();
       $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id);
     }
+
+  }
+
+ return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);
+}
+
+/** 
+ * Function to call when API call is started.  It will record start time
+ *  @param 
+ *  @return nothing
+ */
+function _BeginAPI() {
+  $GLOBALS['api_starttime'] = microtime(true);
+
+  ///
+  /// Get caller IP
+  ///
+  // Test if it is a shared client
+  if (!empty($_SERVER['HTTP_CLIENT_IP'])){
+    $ip = $_SERVER['HTTP_CLIENT_IP'];
+  // Is it a proxy address
+  } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+  } else {
+    $ip = $_SERVER['REMOTE_ADDR'];
+  }
+  $GLOBALS['api_caller_ip'] = ip2long($ip);
+  // Without further identification, use IP as user ID
+  $GLOBALS['api_caller'] = $GLOBALS['api_caller_ip'];
+
+  // If IP not correctly recognized, do not process further
+  if (!($GLOBALS['api_caller_ip'] > 0)) {
+    throw new SoapFault('49', "No IP address found, we cannot process your request further.");
+  }
+
+  // Default function (should be overriden by a called to _MethodAPI)
+  $GLOBALS['api_function'] = 0;
+}
+
+/** 
+ * Must be called by each API to register user and other stats
+ */
+function _MethodAPI($FunctionCode, $Credentials) {
+  $GLOBALS['api_function'] = $FunctionCode;
+
+  $permissions = _GetPermissions($Credentials);
+
+  if (count($permissions) > 0) {
+    $GLOBALS['api_caller'] = $GLOBALS['auth']->auth['pid'];
+  }
+
+  // Prepare database session
+  $db = new DB_Session();
+
+  // Retrieve current quota
+  list($GLOBALS['api_consumed'], $GLOBALS['api_quota'], $GLOBALS['api_remaining_quota']) = _GetQuota();
+
+  // Check quota
+  // (more quota for identified users)
+  $player_quota = $db->select_one("SELECT quota FROM apiquota WHERE player_id={$GLOBALS['api_caller']}");
+  $GLOBALS['api_quota_limit'] = count($permissions) ? ($player_quota > 0 ? $player_quota : 30000) : 8000;
+  if ($GLOBALS['api_remaining_quota'] > $GLOBALS['api_quota_limit']) {
+    throw new SoapFault('34', "Quota exceeded [" . round($GLOBALS['api_remaining_quota']) . " > {$GLOBALS['api_quota_limit']}], try again later or contact us to increase your quota.");
+  }
+
+  // House keeping
+  unset($db);
+
+  return $permissions;
+}
+
+/** 
+ * Function to call when API call is finished.  It will record stop time and add a record to api stats file
+ *  @param 
+ *  @return nothing
+ */
+function _EndAPI() {
+  // Prepare database session
+  $db = new DB_Session();
+
+  // Record usage
+  // DevNote: we should track the real CPU usage instead of elapsed time
+  $time = 1 + abs(round(1000 * (microtime(true) - $GLOBALS['api_starttime'])));
+  $db->select_one("INSERT INTO apiuse (ip, function, time, called) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_function']}, {$time}, {$GLOBALS['api_starttime']});");
+  
+  if ($GLOBALS['api_consumed'] == 0) {
+    if ($GLOBALS['api_function'] == 0) {
+      // Strangely enough, no function was called ; let's still check quota
+      list($GLOBALS['api_consumed'], $GLOBALS['api_quota'], $GLOBALS['api_remaining_quota']) = _GetQuota();
+    }
+  }
+  if ($GLOBALS['api_consumed'] == 0) {
+    // Very first call
+    $db->select_one("INSERT INTO apicurrentquota (id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
+  } else {
+    // Returning user
+    $GLOBALS['api_consumed'] += $time;
+    $GLOBALS['api_quota']     = $GLOBALS['api_remaining_quota'] + $time;
+    $db->select_one("UPDATE apicurrentquota SET lastused={$GLOBALS['api_starttime']}, consumed={$GLOBALS['api_consumed']}, quota={$GLOBALS['api_quota']} WHERE id={$GLOBALS['api_caller']}");
   }
 
   unset($db);
 
-  return !isset($permissions) || $permissions==-1 ? '' : $permissions;
+  if ($GLOBALS['api_function'] == 0) {
+    // This cannot happen, let it fail before giving any other information
+    throw new SoapFault('50', "No API consumed.");
+  }
 }
+
+/** 
+ * Returns the currently consumed quota for current caller
+ *  @return int consumed quota
+ */
+function _GetQuota() {
+  $db = new DB_Session();
+  $a = $db->select_one_array("SELECT consumed, quota, GREATEST(0, quota - 50*({$GLOBALS['api_starttime']}-lastused)) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}");
+  if (is_null($a)) {
+    $a = array(0, 0, 0);
+  }
+  unset($db);
+  return $a;
+}
+
+/** 
+ * Checks if the provided phone number is formally valid
+ *  @param string $str phone number to validate
+ *  @return true formatted valid phone number if validation succeeded, false otherwise
+ */
+function _GetPhone($str) {
+  $str = str_replace(array(' ', '.', '-', '/', '+'), '', $str);
+  // Reject if not only containing numbers (and not empty)
+  if (!preg_match('/^[0-9]+$/', $str)) return FALSE;
+  // Consider numbers starting with only one zero as Belgian numbers
+  if (preg_match('/^0([1-9][0-9]+)/', $str, $matches)) $str = '32'.$matches[1];
+  // Remove numbers starting with two zeros
+  if (preg_match('/^00([0-9]+)/', $str, $matches)) $str = $matches[1];
+  // Reject if longer than 20 characters
+  if (strlen($str)>20) return FALSE;
+  // Reject if smaller than 9 characters
+  if (strlen($str)<9) return FALSE;
+
+  return $str;
+}
+
+/**
+ * Return the name of a division
+ *
+ *  @param string $Show yes = display the full name of the division, short = division a short version of the division name, no = no name
+ *  @param int $Season the season consider
+ *  @param string $DivisionId the divisionid to consider
+ *  @return string the name of the division (or empty if $Show is no) 
+ */
+function _GetDivisionName($Show, $Season, $DivisionId) {
+  $divisionname = '';
+
+  switch ($Show) {
+    case 'yes':
+      $divisionname = create_division_title_text(get_division_info($Season, $DivisionId), true);
+      break;
+    case 'short':
+      $divinfo = get_division_info($Season, $DivisionId);
+      $divisionname  = $divinfo['div_id']>0 ? $divinfo['div_id'] : '';
+      $divisionname .= ($divinfo['div_id']>0||$divinfo['serie']==''?'':$GLOBALS['str_Serie'].' ') . $divinfo['serie'];
+      $divisionname .= strlen($divinfo['extra_name']) ? ($divisionname==''?'':" ") . $divinfo['extra_name'] : '';
+      break;
+    default:
+    case 'no':
+      break;
+  }
+  return $divisionname;
+}
+
 ?>

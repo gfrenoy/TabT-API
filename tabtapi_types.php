@@ -1,19 +1,17 @@
 <?php
-/** \internal
- ****************************************************************************
- * TabT API
- *  A programming interface to access information managed
- *  by TabT, the table tennis information manager.
- * -----------------------------------------------------------------
- * TabT API type descriptions
- * -----------------------------------------------------------------
- * @version 0.7.6
- * -----------------------------------------------------------------
- * Copyright (C) 2007-2011 Gaëtan Frenoy (gaetan@frenoy.net)
- * -----------------------------------------------------------------
- * This file is part of TabT API
+/**
+ * @defgroup TabTAPItypes TabT API type descriptions
  *
- * TabT API is free software: you can redistribute it and/or modify
+ * @brief Here are all types used by TabT API functions
+ *
+ * @author Gaëtan Frenoy <gaetan@frenoy.net>
+ * @version 0.7.21
+ *
+ * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ */
+
+/**
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
@@ -22,19 +20,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with TabT API.  If not, see <http://www.gnu.org/licenses/>.
- **************************************************************************/
 
-/**
- * @defgroup TabTAPItypes TabT API type descriptions
- *
- * @brief Here are all types used by TabT API functions
- *
- * @author Gaëtan Frenoy <gaetan@frenoy.net>
- * @version 0.7.6
- */
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -336,13 +325,25 @@ class TeamEntry
   /**
    * The category of the division wherein the team is playing
    *
-   * Divisions are grouped by category.  All divisions belonging to the same category are sharing
-   * the same properties like the type of match (3 vs 3 or 4 vs 4) and the player ranking system
-   * (men or women).
+   * Divisions are grouped by category.  All divisions belonging to the same category are usually
+   * sharing the same properties like the type of match (3 vs 3 or 4 vs 4) and the player ranking 
+   * system (men or women).
    *
    * @b type:  int
    */
   public $DivisionCategory;
+
+  /**
+   * The type of games that are played during the match
+   *
+   * Each team match is played with a given number of single or double games that are played in
+   * a given order.  The <i>MatchType</i> value defines how the games are played within a team match.
+   *
+   * As an example, for VTTL, MatchType #2 is played by 4 players who are playing 16 single games.
+   *
+   * @b type:  int
+   */
+  public $MatchType;
 }
 
 
@@ -504,28 +505,28 @@ class RankingEntry
   public $GamesDraw;
 
   /**
-   * The number of individual matches won by all players of the team
+   * The number of individual games won by all players of the team
    *
    * @b type:  int
    */
   public $IndividualMatchesWon;
 
   /**
-   * The number of individual matches lost by all players of the team
+   * The number of individual games lost by all players of the team
    *
    * @b type:  int
    */
   public $IndividualMatchesLost;
 
   /**
-   * The number of sets won by all players of the team during their individual matches
+   * The number of sets won by all players of the team during their individual games
    *
    * @b type:  int
    */
   public $IndividualSetsWon;
 
   /**
-   * The number of sets won by all players of the team during their individual matches
+   * The number of sets won by all players of the team during their individual games
    *
    * @b type:  int
    */
@@ -540,6 +541,20 @@ class RankingEntry
    * @b type:  int
    */
   public $Points;
+
+  /**
+   * The club wherein the teams is playing.
+   *
+   * This parameter contains the unique identifier of the club where the team(s)
+   * returned by ::GetClubTeams belongs to.
+   * Example : <code>VLB-225</code> for VTTL club of Hurricane TTW.
+   *
+   * This parameter is usually not shown to the end user but can be used to easily find the club the team
+   * is belonging to (easier that with the long name).
+   *
+   * @b type:  int
+   */
+  public $TeamClub;
 }
 
 /**
@@ -621,6 +636,39 @@ class GetMembersRequest
    * @b type:  boolean
    */
   public $ExtendedInformation;
+
+  /**
+   * Returns extended information about the member's new ranking evaluations.
+   *
+   * If set to "true", valid credential has to be specified.
+   * The number and level of details of the returned new ranking evaluations depend on the credential access rights.
+   *
+   * This parameter is optional.  Default value is false.
+   *
+   * @b type:  boolean
+   */
+  public $RankingPointsInformation;
+
+  /**
+   * Returns results of the member for the selected season.
+   *
+   * This parameter is optional.  Default value is false.
+   *
+   * @b type:  boolean
+   */
+  public $WithResults;
+
+  /**
+   * Returns detailed information about the new ranking evaluations of each member's opponent.
+   *
+   * If set to "true", valid credential has to be specified.
+   * This option requires administrative or ranking rights.
+   *
+   * This parameter is optional.  Default value is false.
+   *
+   * @b type:  boolean
+   */
+  public $WithOpponentRankingEvaluation;
 }
 
 /**
@@ -658,6 +706,9 @@ class GetMembersResponse
    *
    * All players that have the same ranking will receive the same ranking index.  This index is the position of
    * the last player of this ranking.  This index can optionally be used in TabT.
+   *
+   * Note: some members are not "playing members" so it means they cannot play any match.
+   * Such players do not have a raking index
    *
    * @b type:  int
    */
@@ -746,6 +797,137 @@ class GetMembersResponse
     */
   public $MedicalAttestation;
 
+   /**
+    * Number of entries in RankingPointsEntries
+    *
+    * This parameter is optional and may not always be specified (see ::GetMembersRequest).
+    *
+    * Note: NOT IMPLEMENTED YET
+    *
+    * @b type:  boolean
+    */
+  public $RankingPointsCount;
+
+   /**
+    * Information about the member's ranking points
+    *
+    * This parameter is optional and may not always be specified (see ::GetMembersRequest).
+    *
+    * Note: NOT IMPLEMENTED YET
+    *
+    * @b type:  boolean
+    */
+  public $RankingPointsEntries;
+
+   /**
+    * The player's main email address
+    *
+    * This parameter is optional and may not always be specified (see ::GetMembersRequest).
+    *
+    * @b type:  string
+    */
+  public $Email;
+
+   /**
+    * The player's phone information
+    *
+    * This parameter is optional and may not always be specified (see ::GetMembersRequest).
+    *
+    * @b type:  PhoneType
+    */
+  public $Phone;
+
+   /**
+    * The player's address
+    *
+    * This parameter is optional and may not always be specified (see ::GetMembersRequest).
+    *
+    * @b type:  AddressType
+    */
+  public $Address;
+
+   /**
+    * The number of player's results
+    *
+    * This parameter is optional and only returned if WithResults has been set (see ::GetMembersRequest).
+    *
+    * @b type:  AddressType
+    */
+  public $ResultCount;
+
+   /**
+    * Detailed player's results
+    *
+    * This parameter is optional and only returned if WithResults has been set (see ::GetMembersRequest).
+    *
+    * @b type:  PlayerResultEntry[]
+    * @see PlayerResultEntry
+    */
+  public $ResultEntries;
+}
+
+/**
+ * @struct PlayerResultEntry
+ *
+ * @brief A individual game result as returned by ::GetMembers
+ *
+ * @see GetMembers
+ * @since Version 0.7.18
+ * @ingroup TabTAPItypes
+ */
+class PlayerResultEntry
+{
+  /**
+   * The date when the match has been played
+   *
+   * Format is YYYY-MM-DD where
+   * <ul>
+   *   <li>YYYY is the year on 4 digits (eg 2008)</li>
+   *   <li>MM is the month on 2 digits (eg 06)</li>
+   *   <li>DD is the day of the month on 2 digits (eg 29)</li>
+   * </ul>
+   *
+   * @b type:  Date
+   */
+  public $Date;
+
+  /**
+   * The unique member index of the opponent
+   *
+   * @b type:  int
+   * @see GetMembersResponse
+   */
+  public $UniqueIndex;
+
+  /**
+   * The given name of the opponent
+   *
+   * @b type:  string
+   */
+  public $FirstName;
+
+  /**
+   * The family name of the opponent
+   *
+   * @b type:  string
+   */
+  public $LastName;
+
+  /**
+   * The ranking of the opponent
+   *
+   * @b type:  string
+   */
+  public $Ranking;
+
+  /**
+   * The game result
+   *  V = Victory of the player
+   *  D = Defeat of the player
+   *
+   * @b type:  string
+   */
+  public $Result;
 }
 
 /**
@@ -802,6 +984,7 @@ class GetMatchesRequest
    * The division category the matches were played in.
    *
    * This parameter is optional.  If not given all matches of all categories are returned.
+   * A division category is a logical group of divisions, usually by player type (men only, veterans, youth teams)
    *
    * @b type:  int
    */
@@ -811,8 +994,8 @@ class GetMatchesRequest
    * The season when the matches have been played. 
    *
    * This parameter is optional, default is the current season (see ::GetSeasons).
-   * If given in conjuction with DivisionId, the returned list of matches may be empty because
-   * the division does not belong to the given season.
+   * Attention: if no season is given in conjuction with other parameters, the returned list of
+   * matches may be empty because only matches of the current season will be considered
    *
    * @b type:  int
    */
@@ -851,6 +1034,66 @@ class GetMatchesRequest
    * @b type:  ShowDivisionNameType
    */
    public $ShowDivisionName;
+
+   /**
+    * This paramter can be used to filter returned matches based on their date.
+    * Only matches played after this date will be returned.
+    *
+    * Format of the date must be YYYY-MM-DD.
+    *
+    * This parameter is optional.  By default, no filter will be applied on the match date.
+    *
+    * @b type:  dateTime
+    */
+   public $YearDateFrom;
+
+   /**
+    * This paramter can be used to filter returned matches based on their date.
+    * Only matches played before this date will be returned.
+    *
+    * Format of the date must be YYYY-MM-DD.
+    *
+    * This parameter is optional.  By default, no filter will be applied on the match date.
+    *
+    * @b type:  dateTime
+    */
+   public $YearDateTo;
+
+   /**
+    * Returns detailed results for all returned matches.  See ::TeamMatchEntry
+    *
+    * If set to "true", valid credential has to be specified.
+    * Birthdate will only be given if given credential have administrive rights.
+    *
+    * This parameter is optional.  Default value is false.
+    *
+    * @b type:  boolean
+    */
+   public $WithDetails;
+
+   /**
+    * The match identifier to consider.
+    *
+    * This code is given by the championship organisator.  
+    * Example: <code>VLB/01/002</code> or <code>LAND/12/121</code>.
+    * This identifier is unique among all matches of a given season but may not be unique among all the matches.
+    *
+    * This parameter is optional.
+    *
+    * @b type:  string
+    */
+   public $MatchId;
+
+   /**
+    * The unique identified to consider.
+    *
+    * This code is given by the TabT application.  It is a positive integer that is unique among all matches.
+    *
+    * This parameter is optional.
+    *
+    * @b type:  int
+    */
+   public $MatchUniqueId;
 }
 
 /**
@@ -880,7 +1123,7 @@ class GetMatchesResponse
    * @b type:  TeamMatchEntry[]
    * @see TeamMatchEntry
    */
-  public $TeamMatchEntries;
+  public $TeamMatchesEntries;
 }
 
 /**
@@ -909,7 +1152,8 @@ class TeamMatchEntry
    * A identifier for the match
    *
    * This code is given by the championship organisator.  It is usually the combination of the week and a unique number within
-   * the category.  Example: <code>01/002</code> or <code>12/121</code>.  But this number is not unique among all the matches.
+   * the category.  Example: <code>PVLB/01/002</code> or <code>LAND/12/121</code>.
+   * This identifier is unique among all matches of a given season but may not be unique among all the matches.
    * 
    * @b type:  string
    */
@@ -1030,6 +1274,396 @@ class TeamMatchEntry
    * @b type:  string
    */
   public $MatchUniqueId;
+
+  /**
+   * The name of the week (round) following the current one (given by WeekName)
+   *
+   * This is usually a number but can sometimes be a letter.
+   * Example: <code>01</code>, <code>14</code>, <code>D</code>
+   *
+   * @b type:  string
+   */
+  public $NextWeekName;
+
+  /**
+   * The name of the week (round) preceding the current one (given by WeekName)
+   *
+   * This is usually a number but can sometimes be a letter.
+   * Example: <code>01</code>, <code>14</code>, <code>D</code>
+   *
+   * @b type:  string
+   */
+  public $PreviousWeekName;
+
+  /**
+   * Indicates if the home team was not able to play the match and is forced to forteit the game. 
+   *
+   * @b type:  boolean
+   */
+  public $IsHomeForfeited;
+
+  /**
+   * Indicates if the away team was not able to play the match and is forced to forteit the game. 
+   *
+   * @b type:  boolean
+   */
+  public $IsAwayForfeited;
+
+  /**
+   * Details about the team match (among others: when it has been played, who did played and the list of individual games)
+   *
+   * @b type:  TeamMatchDetailsEntry[]
+   * @see TeamMatchDetailsEntry
+   */
+  public $MatchDetails;
+}
+
+/**
+ * @struct TeamMatchDetailsEntry
+ *
+ * @brief Detailed informations about a match between two teams
+ *
+ * @see GetMatches, GetMatchesResponse
+ * @since Version 0.7
+ * @ingroup TabTAPItypes
+ */
+class TeamMatchDetailsEntry
+{
+  /**
+   * Indicates if detailed information about a match between two team is available
+   *
+   * @b type:  boolean
+   */
+  public $DetailsCreated;
+
+  /**
+   * When the team match actually began
+   *
+   * @b type:  dateTime
+   */
+  public $StartTime;
+
+  /**
+   * When the team match actually ended
+   *
+   * @b type:  dateTime
+   */
+  public $EndTime;
+
+  /**
+   * The identifier of the member who was the captain of the home team
+   *
+   * @see UniqueIndex in ::GetMembersResponse
+   *
+   * @b type:  int
+   */
+  public $HomeCaptain;
+
+  /**
+   * The identifier of the member who was the captain of the away team
+   *
+   * @see UniqueIndex in ::GetMembersResponse
+   *
+   * @b type:  int
+   */
+  public $AwayCaptain;
+
+  /**
+   * The identifier of the member who was the referee of this team match
+   *
+   * @see UniqueIndex in ::GetMembersResponse
+   *
+   * @b type:  int
+   */
+  public $Referee;
+
+  /**
+   * The identifier of the member who was the hall commissioner of this team match
+   *
+   * @see UniqueIndex in ::GetMembersResponse
+   *
+   * @b type:  int
+   */
+  public $HallCommissioner;
+
+  /**
+   * List of players of the home team
+   *
+   * @b type:  TeamMatchPlayerList[]
+   * @see TeamMatchPlayerList
+   */
+  public $HomePlayers;
+
+  /**
+   * List of players of the away team
+   *
+   * @b type:  TeamMatchPlayerList[]
+   * @see TeamMatchPlayerList
+   */
+  public $AwayPlayers;
+
+  /**
+   * List of individual games that have been played during the team match
+   *
+   * @b type:  IndividualMatchResultEntry[]
+   * @see IndividualMatchResultEntry
+   */
+  public $IndividualMatchResults;
+
+  /**
+   * Identifier of the match system used to play this team match
+   *
+   * see ::GetMatchSystems
+   *
+   * @b type:  int
+   */
+  public $MatchSystem;
+
+  /**
+   * Final score of the home team
+   *
+   * @b type:  int
+   */
+  public $HomeScore;
+
+  /**
+   * Final score of the away team
+   *
+   * @b type:  int
+   */
+  public $AwayScore;
+}
+
+/**
+ * @struct TeamMatchPlayerList
+ *
+ * @brief A list of players that are participating to a team match
+ *
+ * @see TeamMatchDetailsEntry
+ * @since Version 0.7
+ * @ingroup TabTAPItypes
+ */
+class TeamMatchPlayerList {
+  /**
+   * The number of single players of the (match) team
+   *
+   * @b type:  int
+   */
+  public $PlayerCount;
+
+  /**
+   * The number of double team of the (match) team
+   *
+   * @b type:  int
+   */
+  public $DoubleTeamCount;
+
+  /**
+   * The list of single players
+   *
+   * @b type:  TeamMatchPlayerEntry[]
+   * @see TeamMatchPlayerEntryType
+   */
+  public $Players;
+
+  /**
+   * The list of double teams.
+   *
+   * @b type:  TeamMatchDoubleTeamEntry[]
+   * @see TeamMatchDoubleTeamEntry
+   */
+  public $DoubleTeams;
+}
+
+/**
+ * @struct TeamMatchPlayerEntry
+ *
+ * @brief Defines a single player of a team match
+ *
+ * @see TeamMatchPlayerList
+ * @since Version 0.7
+ * @ingroup TabTAPItypes
+ */
+class TeamMatchPlayerEntry {
+  /**
+   * What is the position of the player on the player list
+   * (this can be important if the game list is predefined, see ::GetMatchSystems)
+   *
+   * @b type:  int
+   */
+  public $Position;
+
+  /**
+   * The unique member index of the player
+   *
+   * @b type:  int
+   * @see GetMembersResponse
+   */
+  public $UniqueIndex;
+
+  /**
+   * The given name of the player
+   *
+   * @b type:  string
+   */
+  public $FirstName;
+
+  /**
+   * The family name of the player
+   *
+   * @b type:  string
+   */
+  public $LastName;
+
+   /**
+    * The ranking of the player
+    *
+    * @b type:  string
+    */
+  public $Ranking;
+
+  /**
+   * The number of invidual games won by the player during the team match
+   * Only games that have been actually played are counted (excluding forfeited games)
+   *
+   * @b type:  int
+   */
+  public $VictoryCount;
+
+  /**
+   * Indicates if the player forfeited all individual games of the team match
+   *
+   * If not defined, value is false.
+   *
+   * @b type:  boolean
+   */
+  public $IsForfeited;
+}
+
+/**
+ * @struct TeamMatchDoubleTeamEntry
+ *
+ * @brief A double team of a team match
+ *
+ * @see TeamMatchPlayerList
+ * @since Version 0.7
+ * @ingroup TabTAPItypes
+ */
+class TeamMatchDoubleTeamEntry {
+  /**
+   * What is the position of the double team on the player list
+   * (this can be important if the game list is predefined, see ::GetMatchSystems)
+   *
+   * @b type:  int
+   */
+  public $Position;
+
+  /**
+   * Defines the double team as a combination of the single players
+   * The value depends on the number of single players
+   * As an example, if there are 3 players in the single player list, the double teams can be:
+   *  1 = Player 1 & Player 2
+   *  2 = Player 1 & Player 3
+   *  3 = Player 2 & Player 3
+   *
+   * @b type:  string
+   */
+  public $Team;
+
+  /**
+   * Indicates if the double team forfeited all double games of the team match
+   *
+   * If not defined, value is false.
+   *
+   * @b type:  boolean
+   */
+  public $IsForfeited;
+}
+
+/**
+ * @struct IndividualMatchResultEntry
+ *
+ * @brief Result of a match between two players (aka single match) or team of two players (aka double match)
+ *
+ * @see IndividualMatchResultEntry
+ * @since Version 0.7
+ * @ingroup TabTAPItypes
+ */
+class IndividualMatchResultEntry {
+  /**
+   * What is the position of game during the team match
+   *
+   * @b type:  int
+   */
+  public $Position;
+
+  /**
+   * The index of the home player (defined as his/her position in the match player list, see TeamMatchPlayerEntry or TeamMatchDoubleTeamEntry)
+   *
+   * @b type:  int
+   */
+  public $HomePlayerMatchIndex;
+
+  /**
+   * The unique member index of the home player (see GetMembersRequest)
+   *
+   * @b type:  int
+   */
+  public $HomePlayerUniqueIndex;
+
+  /**
+   * The index of the away player (defined as his/her position in the match player list, see TeamMatchPlayerEntry or TeamMatchDoubleTeamEntry)
+   *
+   * @b type:  int
+   */
+  public $AwayPlayerMatchIndex;
+
+  /**
+   * The unique member index of the away player (see GetMembersRequest)
+   *
+   * @b type:  int
+   */
+  public $AwayPlayerUniqueIndex;
+
+  /**
+   * Number of sets won by the home player during the game
+   *
+   * @b type:  int
+   */
+  public $HomeSetCount;
+
+  /**
+   * Number of sets won by the away player during the game
+   *
+   * @b type:  int
+   */
+  public $AwaySetCount;
+
+  /**
+   * Indicates if the home player forfeited the game
+   *
+   * @b type:  boolean
+   */
+  public $IsHomeForfeited;
+
+  /**
+   * Indicates if the away player forfeited the game
+   *
+   * @b type:  boolean
+   */
+  public $IsAwayForfeited;
+
+  /**
+   * Detailed score of the individual game.
+   * Each set score is separated by a slash (/)
+   * A set score is the number of points scored by the set looser. If the away player wins the set, this number is preceded by a dash (-).
+   * Example: if individual game scores are 11-7 / 4-11 / 11-8 / 11-5, score will be represented with 7/-4/8/5
+   *
+   * If no score has been registered (including when one of the players forfeited), this field is not returned.
+   *
+   * @b type:  string
+   */
+  public $Scores;
 }
 
 /**
@@ -1156,7 +1790,7 @@ class GetClubsResponse
    * @b type:  ClubEntry[]
    * @see ClubEntry
    */
-  public $ClubsEntries;
+  public $ClubEntries;
 }
 
 /**
@@ -1326,5 +1960,199 @@ class VenueEntry
 
 }
 
+/**
+ * @struct GetTournaments
+ *
+ * @brief Input parameters of the ::GetTournaments API
+ *
+ * @see GetTournaments
+ * @ingroup TabTAPItypes
+ */
+class GetTournaments {
+  /**
+   * Defines credentials (username and password) to connect to a TabT website
+   *
+   * @b type: ::CredentialType
+   */
+  public $Credentials;
+
+  /**
+   * The season when the players were members of the requested club
+   *
+   * This parameter is optional, default is the current season (see ::GetSeasons)
+   *
+   * @b type:  int
+   */
+  public $Season;
+}
+
+/**
+ * @struct GetTournamentsResponse
+ *
+ * @brief Output parameters of the ::GetTournaments API
+ *
+ * @see GetTournaments
+ * @ingroup TabTAPItypes
+ */
+class GetTournamentsResponse {
+  /**
+   * The unique internal index of the tournament
+   *
+   * @b type:  int
+   */
+  public $UniqueIndex;
+
+  /**
+   * The name of the tournament
+   *
+   * @b type:  string
+   */
+  public $Name;
+
+  /**
+   * The unique reference of the tournament
+   *
+   * @b type:  string
+   */
+  public $ExternalIndex;
+
+  /**
+   * When the tournament begins
+   *
+   * @b type:  date
+   */
+  public $DateFrom;
+
+  /**
+   * When the tournament ends?
+   * 
+   * This parameter is optional, if not given, the tournament ends the same day as it begins.
+   *
+   * @b type:  date
+   */
+  public $DateTo;
+
+  /**
+   * The date unti player can register for this tournament.
+   *
+   * @b type:  date
+   */
+  public $RegistrationDate;
+
+  /**
+   * The venue (location) where this tournament is played.
+   *
+   * @b type:  ::VenueEntry
+   * @see VenueEntry
+   */
+  public $Venue;
+
+  /**
+   * The number of series played during this tournament.
+   *
+   * @b type:  int
+   */
+  public $SerieCount;
+
+  /**
+   * The list of series played during this tournament
+   *
+   * @b type:  SerieEntry[]
+   * @see SerieEntry
+   */
+  public $SerieEntries;
+}
+
+/**
+ * @struct TournamentRegister
+ *
+ * @brief Input parameters of the ::TournamentRegister API
+ *
+ * @see TournamentRegister
+ * @ingroup TabTAPItypes
+ */
+class TournamentRegister {
+  /**
+   * Defines credentials (username and password) to connect to a TabT website
+   *
+   * @b type: ::CredentialType
+   */
+  public $Credentials;
+
+  /**
+   * The unique index of the tournament to which the player(s) want(s) to (un)register.
+   *
+   * This parameter is optional.  If not given, Tournament unique index of the serie will be taken.
+   *
+   * @b type:  int
+   */
+  public $TournamentUniqueIndex;
+
+  /**
+   * The unique index of the serie to which the player(s) want(s) to (un)register.
+   *
+   * @b type:  int
+   */
+  public $SerieUniqueIndex;
+
+  /**
+   * The unique index of the player to (un)register to/from the serie.
+   * 
+   * Two entries can be given (in case of double serie)
+   *
+   * @b type:  int
+   */
+  public $PlayerUniqueIndex;
+
+  /**
+   * If set to "true", player(s) will be unregistered from the serie.
+   * 
+   * This parameter is optional.  If not given, player(s) will be registered for the requested serie.
+   * 
+   * @b type:  boolean
+   */
+  public $Unregister;
+
+  /**
+   * If set to "no", concerned player will not receive a mail notification if their registration is changed.
+   * 
+   * This parameter is optional.  If not given, player(s) will be notified of any change in their tournament registration.
+   * 
+   * @b type:  boolean
+   */
+  public $NotifyPlayer;
+}
+
+/**
+ * @struct TournamentRegisterResponse
+ *
+ * @brief Output parameters of the ::TournamentRegister API
+ *
+ * @see TournamentRegisterResponse
+ * @ingroup TabTAPItypes
+ */
+class TournamentRegisterResponse {
+  /**
+   * true is the operation has been successfully performed.
+   * false if the requested operation has not been executed (see MesssageEntries for more information about the reasons).
+   *
+   * @b type:  boolean
+   */
+  public $Success;
+
+  /**
+   * The number of messages returned by ::TournamentRegister.
+   *
+   * @b type:  int
+   */
+  public $MessageCount;
+
+  /**
+   * The list of message returned by ::TournamentRegister
+   *
+   * @b type:  String[]
+   */
+  public $MessageEntries;
+}
 
 ?>

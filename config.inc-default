@@ -10,7 +10,7 @@ $GLOBALS['site_info'] = array(
    'db_name'     => 'tabtdb',
    'db_user'     => 'tabtuser',
    'db_password' => 'tabtpass',
-   // Default season
-   'season'          => 12,
+   // Current season
+   'season'      => 17
 );
 ?>
