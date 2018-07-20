@@ -115,6 +115,8 @@
           <xsd:all>
             <xsd:element name="Credentials" minOccurs="0" maxOccurs="1" type="tns:CredentialsType"/>
             <xsd:element name="Season" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+            <xsd:element name="TournamentUniqueIndex" minOccurs="0" maxOccurs="1" type="xsd:integer" />
+            <xsd:element name="WithResults" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -298,21 +300,23 @@
       </xsd:complexType>
       <xsd:complexType name="IndividualMatchResultEntryType">
         <xsd:sequence>
-          <xsd:element name="Position" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
-          <xsd:element name="HomePlayerMatchIndex" minOccurs="1" maxOccurs="2" type="xsd:integer"/>
-          <xsd:element name="HomePlayerUniqueIndex" minOccurs="1" maxOccurs="2" type="xsd:integer"/>
-          <xsd:element name="AwayPlayerMatchIndex" minOccurs="1" maxOccurs="2" type="xsd:integer"/>
-          <xsd:element name="AwayPlayerUniqueIndex" minOccurs="1" maxOccurs="2" type="xsd:integer"/>
+          <xsd:element name="Position" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="HomePlayerMatchIndex" minOccurs="0" maxOccurs="2" type="xsd:integer"/>
+          <xsd:element name="HomePlayerUniqueIndex" minOccurs="0" maxOccurs="2" type="xsd:integer"/>
+          <xsd:element name="AwayPlayerMatchIndex" minOccurs="0" maxOccurs="2" type="xsd:integer"/>
+          <xsd:element name="AwayPlayerUniqueIndex" minOccurs="0" maxOccurs="2" type="xsd:integer"/>
           <xsd:element name="HomeSetCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="AwaySetCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="IsHomeForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           <xsd:element name="IsAwayForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           <xsd:element name="Scores" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="HomePlayer" minOccurs="0" maxOccurs="2" type="tns:TeamMatchPlayerEntryType"/>
+          <xsd:element name="AwayPlayer" minOccurs="0" maxOccurs="2" type="tns:TeamMatchPlayerEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="TeamMatchPlayerEntryType">
         <xsd:sequence>
-          <xsd:element name="Position" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="Position" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="UniqueIndex" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="FirstName" minOccurs="1" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="LastName" minOccurs="1" maxOccurs="1" type="xsd:string"/>
@@ -480,10 +484,8 @@
         <xsd:sequence>
           <xsd:element name="UniqueIndex" type="xsd:integer"/>
           <xsd:element name="Name" type="xsd:string"/>
-        </xsd:sequence>
-      </xsd:complexType>
-      <xsd:complexType name="TournamentResultEntryType">
-        <xsd:sequence>
+          <xsd:element name="ResultCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="ResultEntries" minOccurs="0" maxOccurs="unbounded" type="tns:IndividualMatchResultEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="MatchSystemEntryType">

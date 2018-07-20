@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.21
+ * @version 0.7.22
  *
  * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
  *
@@ -40,7 +40,7 @@ if (!isset($GLOBALS['site_info']['database'])) {
 
 // Some constants 
 define('WSDL_FILENAME', 'tabt.wsdl');
-define('TABTAPI_VERSION', '0.7.21');
+define('TABTAPI_VERSION', '0.7.22');
 
 // disabling WSDL cache (for test servers only)
 // ini_set("soap.wsdl_cache_enabled", "0");

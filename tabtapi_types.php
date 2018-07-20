@@ -5,7 +5,7 @@
  * @brief Here are all types used by TabT API functions
  *
  * @author Gaëtan Frenoy <gaetan@frenoy.net>
- * @version 0.7.21
+ * @version 0.7.22
  *
  * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
  */
@@ -1984,6 +1984,26 @@ class GetTournaments {
    * @b type:  int
    */
   public $Season;
+
+  /**
+   * The unique index of the tournament to consider.
+   *
+   * This parameter is optional.  If not given, all tournaments of the considered season will be returned.
+   *
+   * @b type:  int
+   */
+  public $TournamentUniqueIndex;
+
+  /**
+   * Returns results of the considered tournament.
+   *
+   * This parameter is optional.  Default value is false.
+   * If set to true, a tournament must be selected using $TournamentUniqueIndex.
+   *
+   * @b type:  boolean
+   */
+  public $WithResults;
+
 }
 
 /**
@@ -2057,10 +2077,56 @@ class GetTournamentsResponse {
   /**
    * The list of series played during this tournament
    *
-   * @b type:  SerieEntry[]
-   * @see SerieEntry
+   * @b type: TournamentSerieEntryType[]
+   * @see TournamentSerieEntryType
    */
   public $SerieEntries;
+}
+
+/**
+ * @struct TournamentSerieEntryType
+ *
+ * @brief A tournament serie
+ *
+ * This structure contains data related to a serie that is played inside a tournament.
+ *
+ * @see GetTournaments
+ * @since Version 0.7.16
+ * @ingroup TabTAPItypes
+ */
+class TournamentSerieEntryType {
+  /**
+   * The unique internal index of the serie
+   *
+   * @b type:  int
+   */
+  public $UniqueIndex;
+
+  /**
+   * The name of the serie
+   *
+   * @b type:  string
+   */
+  public $Name;
+
+   /**
+    * The number of results for this serie
+    *
+    * This parameter is optional and only returned if WithResults has been set (see ::GetTournaments).
+    *
+    * @b type:  AddressType
+    */
+  public $ResultCount;
+
+   /**
+    * Detailed results of a match played within a tournament serie.
+    *
+    * This parameter is optional and only returned if WithResults has been set (see ::GetTournaments) and if some results are available for that serie.
+    *
+    * @b type:  IndividualMatchResultEntryType[]
+    * @see IndividualMatchResultEntryType
+    */
+  public $ResultEntries;
 }
 
 /**

@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.21
+ * @version 0.7.22
  *
  * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
  *
@@ -1608,19 +1608,21 @@ EOQ;
  * 
  * Matches are played inside "series" that typically group players by category (age or ranking).
  *
- * If a specific tournament is given, results of the selected tournament will be given.
+ * If a specific tournament is given, results of the selected tournament can be given.
  *
  * @param $Request GetTournamentsRequest
  * @return GetTournamentsResponse
  * @since Version 0.7.16
- * @version 0.7.21
+ * @version 0.7.22
  */
 function GetTournaments(stdClass $Request) {
   // Check permissions & quota
   $permissions = _MethodAPI(10, isset($Request->Credentials) ? $Request->Credentials : (object)array());
 
-  // Extract function arguments
-  if (isset($Request->Season))       $Season          = trim($Request->Season);
+  // Extract arguments
+  if (isset($Request->Season))                 $Season          = trim($Request->Season);
+  if (isset($Request->TournamentUniqueIndex))  $TournamentId    = trim($Request->TournamentUniqueIndex);
+  $WithResults = isset($Request->WithResults) && $Request->WithResults ? true : false;
 
   // Create database session
   $db = new DB_Session();
@@ -1641,6 +1643,42 @@ function GetTournaments(stdClass $Request) {
     throw new SoapFault('7', "Season [{$Season}] is not valid.");
   }
 
+  // Validate tournament (if given)
+  $tournament_where_clause = '1';
+  if (isset($TournamentId) && !is_numeric($TournamentId)) {
+    throw new SoapFault('49', "Tournament unique index ({$TournamentId}) is not valid, must be numeric.");
+  } elseif (isset($TournamentId)) {
+    $TournamentId = intval($TournamentId);
+    if ($db->select_one("SELECT COUNT(*) FROM tournaments WHERE id={$TournamentId}") <= 0) {
+      throw new SoapFault('50', "Tournament unique index ({$TournamentId}) is not valid.");
+    }
+  }
+  if (isset($TournamentId) && is_numeric($TournamentId)) {
+    $tournament_where_clause = "t.id={$TournamentId}";
+  }
+
+  // Tournament results can only be called by tournament
+  if ($WithResults && !isset($TournamentId)) {
+    throw new SoapFault('51', "TournamentUniqueIndex must be specified to get tournament results.");
+  }
+
+  // Prepare additional clauses to extract results
+  $results_select_clause = '';
+  $results_from_clause = '';
+  $results_where_clause = '1';
+  if ($WithResults) {
+    $results_from_clause = <<<EOC
+LEFT JOIN tournamentresults tr ON tr.tournament_id=t.id
+LEFT JOIN playerinfo player_pi ON player_pi.id=tr.player_id
+LEFT JOIN playerinfo opponent_pi ON opponent_pi.id=tr.opponent_id AND tr.serie_id=ts.id
+LEFT JOIN playerclassement player_pc ON player_pc.season={$Season} AND player_pc.player_id=player_pi.id AND player_pc.category=ts.classementcategory
+LEFT JOIN playerclassement opponent_pc ON opponent_pc.season={$Season} AND opponent_pc.player_id=opponent_pi.id AND opponent_pc.category=ts.classementcategory
+LEFT JOIN classementinfo player_ci ON player_ci.id=player_pc.classement_id AND player_ci.category=player_pc.category
+LEFT JOIN classementinfo opponent_ci ON opponent_ci.id=opponent_pc.classement_id AND opponent_ci.category=opponent_pc.category
+EOC;
+    $results_select_clause = ",GROUP_CONCAT(CONCAT(tr.serie_id, '§', tr.id, '§', player_pi.vttl_index, '§', opponent_pi.vttl_index, '§', player_pi.first_name, '§', opponent_pi.first_name, '§', player_pi.last_name, '§', opponent_pi.last_name, '§', player_ci.name, '§', opponent_ci.name, '§', tr.player_score, '§', tr.opponent_score, '§', tr.player_wo, '§', tr.opponent_wo) SEPARATOR 'µ') as tournament_results";
+  }
+
   // Prepare query to retrieve all tournaments matching the given criteria
   $q = <<<EOQ
 SELECT
@@ -1653,12 +1691,16 @@ SELECT
   t.address_venue as tournament_venue_name,
   t.address_street as tournament_venue_street,
   CONCAT(t.address_zip, ' ', t.address_town) as tournament_venue_town,
-  GROUP_CONCAT(CONCAT(ts.id, '§', ts.name) SEPARATOR 'µ') as tournament_series
+  GROUP_CONCAT(DISTINCT CONCAT(ts.id, '§', ts.name) SEPARATOR 'µ') as tournament_series
+  {$results_select_clause}
 FROM
   tournaments t
   LEFT JOIN tournamentseries ts ON ts.tournament_id=t.id
+  {$results_from_clause}
 WHERE 1
   AND t.season={$Season}
+  AND {$tournament_where_clause}
+  AND {$results_where_clause}
 GROUP BY
   t.id
 EOQ;
@@ -1687,16 +1729,48 @@ EOQ;
         'Town'   => $db->Record['tournament_venue_town']
       );
     }
+    $results = array();
+    if ($WithResults && $db->Record['tournament_results']) {
+      foreach (explode('µ', $db->Record['tournament_results']) as $results_serie) {
+        list($serie_id, $result_id, $player_id, $opponent_id, $player_first_name, $opponent_first_name, $player_last_name, $opponent_last_name, $player_ranking, $opponent_ranking, $player_score, $opponent_score) = explode('§', $results_serie);
+        if (!isset($results[$serie_id])) {
+          $results[$serie_id] = array();
+        }
+        $results[$serie_id][] = array(
+          'HomePlayer'    => array(
+            'UniqueIndex' => $player_id,
+            'FirstName'   => $player_first_name,
+            'LastName'    => $player_last_name,
+            'Ranking'     => $player_ranking
+          ),
+          'AwayPlayer'    => array(
+            'UniqueIndex' => $opponent_id,
+            'FirstName'   => $opponent_first_name,
+            'LastName'    => $opponent_last_name,
+            'Ranking'     => $opponent_ranking
+          ),
+          'HomeSetCount'  => $player_score,
+          'AwaySetCount'  => $opponent_score,
+        );
+      }
+    }
     if ($db->Record['tournament_series']) {
       $series = explode('µ', $db->Record['tournament_series']);
       $tournamentEntry['SerieCount'] = count($series);
       $tournamentEntry['SerieEntries'] = array();
       foreach ($series as $serie) {
         list($serie_id, $serie_name) = explode('§', $serie);
-        $tournamentEntry['SerieEntries'][] = array(
+        $SerieEntry = array(
           'UniqueIndex' => $serie_id,
           'Name'        => $serie_name
         );
+        if ($WithResults) {
+          $SerieEntry['ResultCount'] = count($results[$serie_id]);
+          if (count($results[$serie_id]) > 0) {
+            $SerieEntry['ResultEntries'] = $results[$serie_id];
+          }
+        }
+        $tournamentEntry['SerieEntries'][] = $SerieEntry;
       }
     } else {
       $tournamentEntry['SerieCount'] = 0;
