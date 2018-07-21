@@ -347,6 +347,8 @@
           <xsd:element name="MatchSystem" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="HomeScore" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="AwayScore" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="CommentCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="CommentEntries" minOccurs="0" maxOccurs="unbounded" type="tns:CommentEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="TeamMatchEntryType">
@@ -378,6 +380,13 @@
           <xsd:element name="DoubleTeams" minOccurs="0" maxOccurs="unbounded" type="tns:TeamMatchDoubleTeamEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
+      <xsd:complexType name="CommentEntryType">
+        <xsd:sequence>
+          <xsd:element name="Timestamp" type="xsd:dateTime"/>
+          <xsd:element name="Author" type="tns:MemberEntryType"/>
+          <xsd:element name="Comment" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
       <xsd:complexType name="MemberEntryType">
         <xsd:sequence>
           <xsd:element name="Position" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
@@ -385,7 +394,7 @@
           <xsd:element name="RankingIndex" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="FirstName" type="xsd:string"/>
           <xsd:element name="LastName" type="xsd:string"/>
-          <xsd:element name="Ranking" type="xsd:string"/>
+          <xsd:element name="Ranking" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Status" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Gender" minOccurs="0" maxOccurs="1" type="tns:GenderType"/>

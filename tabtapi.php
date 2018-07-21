@@ -78,7 +78,6 @@ if (!include_once('tabtapi_types.php')) {
  * @param[in] $Request TestRequest
  * @return TestResponse
  * @see TestRequest, TestResponse
- * @author Gaëtan Frenoy <gaetan@frenoy.net>
  * @version 0.7.16
  * @ingroup TabTAPIfunctions
  */
@@ -551,6 +550,12 @@ function GetMatches(stdClass $Request) {
     $uniquematch_where_clause = "divr.match_id={$MatchUniqueId}";
   }
 
+  // Defines some escape separators
+  $escape_separators = array(
+    '§' => '%£+|!1',
+    'µ' => '%£+|!2'
+  );
+
   // More additional clauses if details are required
   $details_select_clause = '';
   $details_from_clause = '';
@@ -563,6 +568,9 @@ function GetMatches(stdClass $Request) {
     $details_select_clause .= ",pi_ac.vttl_index as `AwayCaptain`";
     $details_select_clause .= ",pi_ref.vttl_index as `Referee`";
     $details_select_clause .= ",pi_rr.vttl_index as `HallCommissioner`";
+    if ($MatchUniqueId > 0) {
+      $details_select_clause .= ",IF(mc.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mc.id, '§', mc.date, '§', pi_authors.vttl_index, '§', pi_authors.first_name, '§', pi_authors.last_name, '§', REPLACE(REPLACE(mc.message, '§', '{$GLOBALS['escape_separators']['§']}'), 'µ', '{$GLOBALS['escape_separators']['µ']}')) ORDER BY mc.date DESC SEPARATOR 'µ')) as `MatchComments`";
+    }
 
     $details_from_clause  = " LEFT JOIN matchinfo as mi ON mi.id=divr.match_id";
     $details_from_clause .= " LEFT JOIN playerinfo as pi_hc ON mi.home_captain_player_id=pi_hc.id";
@@ -571,6 +579,12 @@ function GetMatches(stdClass $Request) {
     $details_from_clause .= " LEFT JOIN playerinfo as pi_rr ON mi.room_responsible_player_id=pi_rr.id";
     $details_from_clause .= " LEFT JOIN matchtypeinfo as mti ON mti.id=mi.match_type_id";
     $details_from_clause .= " LEFT JOIN matchplayer as mp ON mp.match_id=mi.id";
+    if ($MatchUniqueId > 0) {
+      $match_comment_table = get_match_comment_table_query($MatchUniqueId);
+      $details_from_clause .= " LEFT JOIN {$match_comment_table} as mc ON mc.match_id=mi.id";
+      $details_from_clause .= " LEFT JOIN auth_user as mc_authors ON mc_authors.user_id=mc.user_id";
+      $details_from_clause .= " LEFT JOIN playerinfo as pi_authors ON pi_authors.id=mc_authors.player_id";
+    }
 
     foreach (array('home', 'away') as $homeaway) {
       $classement_select_clause = get_classement_select_clause($homeaway . '_ci');
@@ -700,6 +714,27 @@ EOQ;
       }
       if ($db->Record['HallCommissioner']) {
         $resDetails['HallCommissioner'] = intval($db->Record['HallCommissioner']);
+      }
+      $resDetails['CommentCount'] = 0;
+      if (isset($db->Record['MatchComments']) && strlen(trim($db->Record['MatchComments']))>0) {
+        $comments = explode('µ', $db->Record['MatchComments']);
+        if (!isset($resDetails['MatchComments'])) {
+          $resDetails['CommentCount'] = count($comments);
+          $resDetails['CommentEntries'] = array();
+        }
+        foreach ($comments as $comment_str) {
+          list($comment_id, $timestamp, $author_id, $author_first_name, $author_last_name, $comment) = explode('§', $comment_str);
+          $comment = str_replace(array_keys($escape_separators), array_values($escape_separators), $comment);
+          $resDetails['CommentEntries'][] = array(
+            'Timestamp' => $timestamp,
+            'Author'    => array(
+              'UniqueIndex' => $author_id,
+              'FirstName'   => $author_first_name,
+              'LastName'    => $author_last_name
+            ),
+            'Comment'   => $comment
+          );
+        }
       }
     }
     if ($WithDetails && $db->Record['MatchUniqueId']>0) {
