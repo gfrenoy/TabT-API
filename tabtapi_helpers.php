@@ -31,8 +31,25 @@ function _GetPermissions($Credentials) {
   $Account  = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account) : '';
   $Password = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password) : '';
   if ($Account != '') {
-    $q = "SELECT a.perms, s.sid, a.player_id, pc.club_id FROM auth_user as a LEFT JOIN active_sessions s ON s.sid=a.user_id LEFT JOIN playerclub pc ON a.player_id=pc.player_id WHERE a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id) ORDER BY pc.season DESC; ";
-    list($permissions, $session_id, $player_id, $club_id) = $db->select_one_array($q);
+    $q = <<<EOQ
+SELECT
+  a.perms,
+  s.sid,
+  a.player_id,
+  pc.club_id,
+  cc_reg.id as region_category,
+  cc_reg.main_level as region_level
+FROM
+  auth_user as a
+  LEFT JOIN active_sessions s ON s.sid=a.user_id
+  LEFT JOIN playerclub pc ON a.player_id=pc.player_id
+  LEFT JOIN clubs as c ON c.id=pc.club_id
+  LEFT JOIN clubcategories as cc_reg ON cc_reg.group LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
+WHERE
+  a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id)
+ORDER BY pc.season DESC;
+EOQ;
+    list($permissions, $session_id, $player_id, $club_id, $region, $region_level) = $db->select_one_array($q);
   }
   unset($db);
 
@@ -55,9 +72,11 @@ function _GetPermissions($Credentials) {
     if (is_string($permissions)) {
       $GLOBALS['perm'] = new HurriPerm();
       $GLOBALS['auth'] = new Auth();
-      $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id);
-    }
+      $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
+      $levels[] = $region_level;
 
+      $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id, 'region' => $region, 'region_levels' => $levels);
+    }
   }
 
  return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);

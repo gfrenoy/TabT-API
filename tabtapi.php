@@ -959,7 +959,7 @@ function GetMembers(stdClass $Request) {
   include_once($GLOBALS['site_info']['path'].'public/players_fct.php');
 
   // Extract function arguments
-  $Club                     = $Request->Club;
+  $Club                     = trim($Request->Club);
   $Season                   = trim($Request->Season);
   $PlayerCategory           = $Request->PlayerCategory;
   $UniqueIndex              = $Request->UniqueIndex;
@@ -999,7 +999,7 @@ function GetMembers(stdClass $Request) {
   if ($Club != '')
   {
     $Club = str_replace(array('-','/',' '), '', strtoupper($Club));
-    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>{$Season})";
+    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>={$Season})";
     $ClubId = $db->select_one($q);
     if (!is_numeric($ClubId) || $ClubId < 0)
     {
@@ -1354,7 +1354,7 @@ function Upload(stdClass $Request) {
   $Data        = trim($Request->Data);
 
   // Check permissions
-  if (count(array_intersect($permissions, array('club', 'province', 'admin')))==0) {
+  if (count(array_intersect($permissions, array('club', 'province', 'region', 'admin')))==0) {
     throw new SoapFault('22', "You don't have permission to upload data.  Please contact your administrator.");
   }
 
