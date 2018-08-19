@@ -40,9 +40,15 @@
  * <p>The TabT API is based on <a href="http://en.wikipedia.org/wiki/SOAP">SOAP</a> and
  * <a href="http://en.wikipedia.org/wiki/Web_service">Web service</a> technologies. Those frameworks are now available
  * for any modern programming language like PHP, C#, VB.NET or java.</p>
+ * <h3>Contact</h3>
+ * <a href="https://babelut.be/@tabt" target="_blank"><img style="margin-right: 10px; border: 0; float: left;" src="mastodon.png" title="Mastodon icon"></a>
+ * To keep you up to date of the latest changes or for questions and suggestions or any kind of interaction with the
+ * developpers and other users of TabT API, we strongly suggest you to follow the TabT account on the
+ * <a href="https://en.wikipedia.org/wiki/Fediverse">Fediverse</a> (typically <a href="https://joinmastodon.org/">Mastodon</a>) :<br/>
+ * <a href="https://babelut.be/@tabt" target="_blank">@tabt@babelut.be</a>.
  * <h3>License</h3>
  * <a href="http://www.fsf.org/licensing/licenses/agpl-3.0.html">
- * <p><img style="margin-right: 10px; border: 0; float: left;" src="http://api.frenoy.net/agplv3-88x31.png" title="GNU Affero General Public License"></a>
+ * <p><img style="margin-right: 10px; border: 0; float: left;" src="agplv3-88x31.png" title="GNU Affero General Public License"></a>
  * TabT API is released under the terms of version 3 of the <a href="http://www.fsf.org/licensing/licenses/agpl-3.0.html">
  * GNU Affero General Public License</a> that is is a free, copyleft license for software, specifically designed to 
  * ensure cooperation with the community in the case of network server software.  The GNU Affero GPL is designed 
@@ -199,8 +205,7 @@ function GetClubTeams(stdClass $Request) {
   if ($Club == '') {
     throw new SoapFault('17', "Club is not valid, cannot be empty.");
   }
-    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>{$Season})";
-  list($ClubId, $ClubName) = $db->select_one_array($q);
+  list($ClubId, $ClubName) = _GetClubInfo($Season, $Club);
   if (!is_numeric($ClubId) || $ClubId < 0) {
     throw new SoapFault('9', "Club [{$Club}] is not valid.");
   }
@@ -372,7 +377,7 @@ function GetDivisionRanking(stdClass $Request) {
  * @param $Request GetMatchesRequest
  * @return GetMatchesResponse
  * @since Version 0.4
- * @version 0.7.18
+ * @version 0.7.22
  * @see GetMatchesRequest, GetMatchesResponse
  * @ingroup TabTAPIfunctions
  */
@@ -418,7 +423,12 @@ function GetMatches(stdClass $Request) {
     unset($Season);
     if (is_numeric($DivisionId)) {
       $Season = $db->select_one("SELECT season FROM divisioninfo WHERE id={$DivisionId};");
-    } else if (isset($YearDateFrom)) {
+    } elseif (is_numeric($MatchUniqueId) && $MatchUniqueId > 0) {
+      $Season = $db->select_one("SELECT di.season FROM divisionresults divr, divisioninfo di WHERE divr.match_id={$MatchUniqueId} AND di.id=divr.div_id;");
+      if ($Season == -1) {
+        unset($Season);
+      }
+    } elseif (isset($YearDateFrom)) {
       $Season = $db->select_one("SELECT id FROM seasoninfo WHERE start_date < FROM_UNIXTIME({$YearDateFrom}) AND stop_date > FROM_UNIXTIME({$YearDateFrom});");
       if ($Season == -1) {
         unset($Season);
@@ -438,8 +448,7 @@ function GetMatches(stdClass $Request) {
 
   // Check club
   if ($Club != '') {
-    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>{$Season})";
-    $ClubId = $db->select_one($q);
+    list($ClubId, $ClubName) = _GetClubInfo($Season, $Club);
     if (!is_numeric($ClubId) || $ClubId < 0) {
       throw new SoapFault('9', "Club [{$Club}] is not valid.");
     }
@@ -998,9 +1007,7 @@ function GetMembers(stdClass $Request) {
   $Club = trim($Club);
   if ($Club != '')
   {
-    $Club = str_replace(array('-','/',' '), '', strtoupper($Club));
-    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>={$Season})";
-    $ClubId = $db->select_one($q);
+    list($ClubId, $ClubName) = _GetClubInfo($Season, $Club);
     if (!is_numeric($ClubId) || $ClubId < 0)
     {
       throw new SoapFault('9', "Club [{$Club}] is not valid.");
@@ -1128,7 +1135,7 @@ function GetMembers(stdClass $Request) {
     $db->query("SET SESSION group_concat_max_len = 2000000;");
     $results_join_clause  =  "LEFT JOIN tmp_resultsraw as raw ON raw.player_id=pi.id AND raw.season=si.id AND match_value>0 AND raw.res IN ('D', 'V') and raw.category IN (SELECT id FROM divisioncategories WHERE classementcategory={$RankingCategory})";
     $results_join_clause .= " LEFT JOIN playerinfo as opp_pi ON opp_pi.id=raw.opp_id";
-    $results_join_clause .= " LEFT JOIN classementinfo as ci_raw ON ci_raw.id=raw.opp_cl AND ci_raw.category=raw.category";
+    $results_join_clause .= " LEFT JOIN classementinfo as ci_raw ON ci_raw.id=raw.opp_cl AND ci_raw.category={$RankingCategory}";
     $results_join_clause .= " LEFT JOIN playerclub as opp_pclub ON opp_pclub.season={$Season} AND opp_pclub.player_id=raw.opp_id";
     $results_join_clause .= " LEFT JOIN clubs as opp_club ON opp_club.id=opp_pclub.club_id";
     $results_join_clause .= " LEFT JOIN tournamentseries as ts ON ts.id=raw.match_id";
@@ -1440,7 +1447,7 @@ function GetClubs(stdClass $Request) {
   $ClubId = 0;
   $Club = isset($Club) ? str_replace(array('-','/',' '), '', strtoupper($Club)) : '';
   if ($Club != '') {
-    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>{$Season})";
+    $q = "SELECT id FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>={$Season})";
     $ClubId = $db->select_one($q);
     if (!is_numeric($ClubId) || $ClubId < 0) {
       throw new SoapFault('9', "Club [{$Club}] is not valid.");

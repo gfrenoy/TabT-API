@@ -46,12 +46,21 @@ class CredentialsType {
    * @b type: string
    */
   public $Account;
+
   /**
    * Your password
    *
    * @b type: string
    */
   public $Password;
+
+  /**
+   * For administrators, given them the option to send request on behalf of another user.
+   * This can be interesting to make sure comments and other actions are recorded under the correct identity.
+   *
+   * @b type: int
+   */
+  public $OnBehalfOf;
 }
 
 /**
@@ -66,7 +75,7 @@ class TestRequest {
   /**
    * Defines credentials (username and password) to connect to a TabT website
    *
-   * @b type: ::CredentialType
+   * @b type: ::CredentialsType
    */
   public $Credentials;
 }
@@ -2065,7 +2074,7 @@ class GetTournamentsRequest {
   /**
    * Defines credentials (username and password) to connect to a TabT website
    *
-   * @b type: ::CredentialType
+   * @b type: ::CredentialsType
    */
   public $Credentials;
 
@@ -2234,7 +2243,7 @@ class TournamentRegister {
   /**
    * Defines credentials (username and password) to connect to a TabT website
    *
-   * @b type: ::CredentialType
+   * @b type: ::CredentialsType
    */
   public $Credentials;
 

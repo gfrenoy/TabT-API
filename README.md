@@ -18,10 +18,14 @@ software, ...) or website (for his/her own club) based on the powerful TabT engi
 
 ## Contact
 
-Feel free to ask any question to "tabt@frenoy.net"
+[<img src="http://api.frenoy.net/mastodon.png" align="left" width="50px" height="54px" />](https://babelut.be/@tabt)
+ 
+To keep up to date of the latest changes or for questions and suggestions or any kind of
+interaction with the developpers and other users of TabT API, we strongly suggest you to
+follow the TabT account on the [Fediverse](https://en.wikipedia.org/wiki/Fediverse) [Mastodon](https://joinmastodon.org/) :
+[@tabt@babelut.be](https://babelut.be/@tabt).
 
-But preferably follow the development on GitHub : https://github.com/gfrenoy/TabT-API
-and post bug reports or feature requests to : https://github.com/gfrenoy/TabT-API/issues
+And please post bug reports or feature requests to : https://github.com/gfrenoy/TabT-API/issues
 
 ## License
 

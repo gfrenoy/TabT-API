@@ -70,26 +70,6 @@ if (isset($_GET['DOC']) || isset($_GET['doc'])) {
 // Specifiy default language
 $lang = isset($GLOBALS['site_info']['default_language']) ? $GLOBALS['site_info']['default_language'] : 'nl';
 
-// Main library
-if (!@include_once($GLOBALS['site_info']['path'].'public/prepend.php'))
-{
-  print('TabT not correctly installed on server (library not found).');
-  exit;
-}
-// Some general helper functions
-if (!@include_once($GLOBALS['site_info']['path'].'public/helpers.php'))
-{
-  print('TabT not correctly installed on server (helpers not found).');
-  exit;
-}
-// i18n
-if (!@include_once($GLOBALS['site_info']['path'].'public/localization.php'))
-{
-  print('TabT not correctly installed on server (i18n not found).');
-  exit;
-}
-dict_compute();
-
 // TabT API Includes
 if (!@include_once('tabtapi_helpers.php')) {
   print('TabT not correclty installed (error loading tabtapi_helpers)');

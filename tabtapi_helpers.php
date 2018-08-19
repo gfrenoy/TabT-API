@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.20
+ * @version 0.7.22
  *
  * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
  *
@@ -28,8 +28,10 @@ function _GetPermissions($Credentials) {
   // Establish a dummy connection to make sure "mysql_real_escape_string" works as expected
   $db = new DB_Session();
   $db->query('SELECT COUNT(*) FROM auth_user');
-  $Account  = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account) : '';
-  $Password = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password) : '';
+  $Account    = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account) : '';
+  $Password   = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password) : '';
+  $OnBehalfOf = isset($Credentials->OnBehalfOf) && is_numeric($Credentials->OnBehalfOf)? intval($Credentials->OnBehalfOf) : 0;
+
   if ($Account != '') {
     $q = <<<EOQ
 SELECT
@@ -44,14 +46,13 @@ FROM
   LEFT JOIN active_sessions s ON s.sid=a.user_id
   LEFT JOIN playerclub pc ON a.player_id=pc.player_id
   LEFT JOIN clubs as c ON c.id=pc.club_id
-  LEFT JOIN clubcategories as cc_reg ON cc_reg.group LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
+  LEFT JOIN clubcategories as cc_reg ON CONCAT(',', cc_reg.group, ',') LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
 WHERE
   a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id)
 ORDER BY pc.season DESC;
 EOQ;
-    list($permissions, $session_id, $player_id, $club_id, $region, $region_level) = $db->select_one_array($q);
+    list($permissions, $session_id, $player_id, $club_id, $region, $region_level) = $db->select_one_array(utf8_decode($q));
   }
-  unset($db);
 
   // If valid account, try to retrieve the preferred language of
   // the connected user
@@ -69,15 +70,58 @@ EOQ;
     unset($session_access);
 
     // Create dummy "Perm" object for TabT functions that are using it
-    if (is_string($permissions)) {
+    if (is_string($permissions) && $region && is_numeric($region)) {
       $GLOBALS['perm'] = new HurriPerm();
       $GLOBALS['auth'] = new Auth();
       $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
       $levels[] = $region_level;
 
       $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id, 'region' => $region, 'region_levels' => $levels);
+
+      if ($OnBehalfOf > 0) {
+        $season = $db->select_one("SELECT max(id) FROM seasoninfo");
+        list($requested_player_id, $requested_club_category, $requested_permissions) = $db->select_one_array("SELECT pi.id, c.category, IFNULL(a.perms, 'user') FROM playerinfo as pi LEFT JOIN playerclub pc ON pc.season={$season} AND pc.player_id=pi.id LEFT JOIN clubs as c ON c.id=pc.club_id LEFT JOIN auth_user a ON a.player_id=pi.id WHERE pi.vttl_index={$OnBehalfOf}");
+
+        if ($requested_player_id > 0) {
+          $permissions_array = explode(',', $permissions);
+          if (count(array_intersect($permissions_array, array('region', 'admin'))) == 0) {
+            $GLOBALS['permission_error'] = array(
+              'code'    => '53',
+              'message' => "You don't have enough permission to act on behalf of another user."
+            );
+            unset($permissions);
+          } elseif (count(array_intersect($permissions_array, array('region'))) == 1 && count(array_intersect($requested_permissions, array('admin'))) > 0) {
+            $GLOBALS['permission_error'] = array(
+              'code'    => '54',
+              'message' => "You don't have enough permission to act on behalf of a admin user."
+            );
+            unset($permissions);
+          } elseif (count(array_intersect($permissions_array, array('region'))) == 1 && count(array_intersect($permissions_array, array('admin'))) == 0 && !in_array($requested_club_category, get_club_category_array($region))) {
+            $GLOBALS['permission_error'] = array(
+              'code'    => '55',
+              'message' => "You don't have enough permission to act on behalf of a user from another region."
+            );
+            unset($permissions);
+          } else {
+            // Override user/permissions
+            $GLOBALS['auth']->auth['pid']  = $requested_player_id;
+            $GLOBALS['auth']->auth['perm'] = $requested_permissions;
+          }
+        } else {
+          $GLOBALS['permission_error'] = array(
+            'code'    => '52',
+            'message' => "Invalid unique index."
+          );
+          unset($permissions);
+        }
+      }
+
+    } else {
+      unset($permissions);
     }
   }
+
+  unset($db);
 
  return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);
 }
@@ -136,13 +180,20 @@ function _MethodAPI($FunctionCode, $Credentials) {
   // Check quota
   // (more quota for identified users)
   $player_quota = $db->select_one("SELECT quota FROM apiquota WHERE player_id={$GLOBALS['api_caller']}");
+
+  // House keeping
+  unset($db);
+
+  // Check quota
   $GLOBALS['api_quota_limit'] = count($permissions) ? ($player_quota > 0 ? $player_quota : 30000) : 8000;
   if ($GLOBALS['api_remaining_quota'] > $GLOBALS['api_quota_limit']) {
     throw new SoapFault('34', "Quota exceeded [" . round($GLOBALS['api_remaining_quota']) . " > {$GLOBALS['api_quota_limit']}], try again later or contact us to increase your quota.");
   }
 
-  // House keeping
-  unset($db);
+  // Check error during permission processing
+  if (isset($GLOBALS['permission_error'])) {
+    throw new SoapFault($GLOBALS['permission_error']['code'], $GLOBALS['permission_error']['message']);
+  }
 
   return $permissions;
 }
@@ -246,6 +297,30 @@ function _GetDivisionName($Show, $Season, $DivisionId) {
       break;
   }
   return $divisionname;
+}
+
+/**
+ * Return the name of a division
+ *
+ *  @param int $Season the season consider
+ *  @param string $Club the club indice we're looking for
+ *  @return array ID and name of the club, -1 otherwise
+ */
+function _GetClubInfo($Season, $Club) {
+  $db = new DB_Session();
+
+  // Clean up user input
+  $Club = str_replace(array('-','/',' ', '\'', '"'), '', strtoupper($Club));
+
+  // Query database
+  $q = "SELECT id, name FROM clubs AS c WHERE REPLACE(REPLACE(REPLACE(UCASE(c.indice), ' ', ''), '/', ''), '-', '')='{$Club}' AND (ISNULL(c.first_season) OR c.first_season<={$Season}) AND (ISNULL(c.last_season) OR c.last_season>={$Season})";
+  $response = $db->select_one_array($q);
+
+  // Housekeeping
+  $db->free();
+  unset($db);
+
+  return $response;
 }
 
 ?>

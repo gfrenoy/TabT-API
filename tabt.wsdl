@@ -254,6 +254,7 @@
         <xsd:all>
           <xsd:element name="Account" minOccurs="1" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Password" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="OnBehalfOf" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
         </xsd:all>
       </xsd:complexType>
       <xsd:complexType name="SeasonEntryType" nillable="false">
