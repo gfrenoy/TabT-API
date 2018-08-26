@@ -9,7 +9,7 @@ This ensures that everybody can see what you are actually working on and will pr
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
 ## Contributor Agreement
-By contributing code to Ásbrú Connection Manager, you assert that:
+By contributing code to TabT-API, you assert that:
 
 * You have the rights to include the code, either as its original author, or due to it being released to you under a compatible license.
 * You are not aware of any third party claims on the code, including copyright, patent, trademark, or any other legal claim.
