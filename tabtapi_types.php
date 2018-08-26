@@ -107,10 +107,11 @@ class TestResponse {
   /**
    * Language used when replying to requests
    *
-   * Default language is English but if valid credentials
-   * are given, user's language will be used.
-   * To change this language, one has to connect to the
-   * TabT web interface and select his/her preferred language
+   * Default language is enforced by the configuration of the TabT instance but if
+   * valid credentials are given, user's language will be used.  Hence, to change this language,
+   * one has to connect to the TabT web interface and select his/her preferred language.
+   *
+   * If no default language is set by the TabT instance, English will be used.
    */
   public $Language;
   /**
