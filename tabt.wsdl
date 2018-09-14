@@ -357,6 +357,7 @@
           <xsd:element name="DivisionName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="MatchId" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="WeekName" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="TeamMatchEntryType" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="Date" minOccurs="0" maxOccurs="1" type="xsd:date"/>
           <xsd:element name="Time" minOccurs="0" maxOccurs="1" type="xsd:time"/>
           <xsd:element name="Venue" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
