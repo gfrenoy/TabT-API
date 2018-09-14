@@ -618,6 +618,7 @@ SELECT
   di.id as `DivisionId`,
   {$matchnum_select} as `MatchId`,
   wname.name as `WeekName`,
+  di.category as `TeamMatchEntryType`,
   {$date_select} as `Date`,
   {$hour_select} as `Time`,
   IFNULL(club_home.indice, '-') as `HomeClub`,
