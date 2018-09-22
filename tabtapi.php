@@ -710,7 +710,8 @@ EOQ;
     if ($WithDetails) {
       $resDetails = array(
         'DetailsCreated' => $db->Record['MatchUniqueId']>0,
-        'MatchSystem'    => $db->Record['MatchTypeId']
+        'MatchSystem'    => $db->Record['MatchTypeId'],
+        'DivisionId'     => $db->Record['DivisionId']
       );
       if ($db->Record['HomeCaptain']) {
         $resDetails['HomeCaptain'] = intval($db->Record['HomeCaptain']);
