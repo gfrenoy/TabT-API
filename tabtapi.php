@@ -616,9 +616,9 @@ function GetMatches(stdClass $Request) {
   $q = <<<EOQ
 SELECT
   di.id as `DivisionId`,
+  di.category as `DivisionCategory`,
   {$matchnum_select} as `MatchId`,
   wname.name as `WeekName`,
-  di.category as `TeamMatchEntryType`,
   {$date_select} as `Date`,
   {$hour_select} as `Time`,
   IFNULL(club_home.indice, '-') as `HomeClub`,
@@ -711,8 +711,7 @@ EOQ;
     if ($WithDetails) {
       $resDetails = array(
         'DetailsCreated' => $db->Record['MatchUniqueId']>0,
-        'MatchSystem'    => $db->Record['MatchTypeId'],
-        'DivisionId'     => $db->Record['DivisionId']
+        'MatchSystem'    => $db->Record['MatchTypeId']
       );
       if ($db->Record['HomeCaptain']) {
         $resDetails['HomeCaptain'] = intval($db->Record['HomeCaptain']);
@@ -885,9 +884,10 @@ EOQ;
         array() :
         array('DivisionName' => $divisionname),
       array(
-        'MatchId'      => $db->Record['MatchId'],
-        'WeekName'     => $db->Record['WeekName'],
-        'TeamMatchEntryType' => $db->Record['TeamMatchEntryType']
+        'DivisionId'       => $db->Record['DivisionId'],
+        'DivisionCategory' => $db->Record['DivisionCategory'],
+        'MatchId'          => $db->Record['MatchId'],
+        'WeekName'         => $db->Record['WeekName']
       ),
       $db->Record['Date'] == '-' ?
         array() :

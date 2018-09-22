@@ -218,7 +218,7 @@ function _EndAPI() {
       list($GLOBALS['api_consumed'], $GLOBALS['api_quota'], $GLOBALS['api_remaining_quota']) = _GetQuota();
     }
   }
-  if ($GLOBALS['api_consumed'] == 0) {
+  if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}") == 0) {
     // Very first call
     $db->select_one("INSERT INTO apicurrentquota (id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
   } else {
@@ -242,7 +242,7 @@ function _EndAPI() {
  */
 function _GetQuota() {
   $db = new DB_Session();
-  $a = $db->select_one_array("SELECT consumed, quota, GREATEST(0, quota - 50*({$GLOBALS['api_starttime']}-lastused)) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}");
+  $a = $db->select_one_array("SELECT consumed, quota, GREATEST(0, quota - 200*({$GLOBALS['api_starttime']}-lastused)) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}");
   if (is_null($a)) {
     $a = array(0, 0, 0);
   }

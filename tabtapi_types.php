@@ -309,7 +309,7 @@ class TeamEntry
   public $Team;
   
   /**
-   * The unique identified of the division wherein the team is playing.
+   * The unique identifier of the division wherein the team is playing.
    *
    * @b type:  int
    */
@@ -1196,6 +1196,20 @@ class TeamMatchEntry
    * @b type:  string
    */
   public $DivisionName;
+
+  /**
+   * The unique identifier of the division wherein the match has been played.
+   *
+   * @b type:  int
+   */
+  public $DivisionId;
+
+  /**
+   * The category of the division wherein the match has been played.
+   *
+   * @b type:  int
+   */
+  public $DivisionCategory;
 
   /**
    * A identifier for the match

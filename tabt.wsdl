@@ -355,10 +355,8 @@
       <xsd:complexType name="TeamMatchEntryType">
         <xsd:all>
           <xsd:element name="DivisionName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
-          <xsd:element name="DivisionId" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="MatchId" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="WeekName" maxOccurs="1" type="xsd:string"/>
-          <xsd:element name="TeamMatchEntryType" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="Date" minOccurs="0" maxOccurs="1" type="xsd:date"/>
           <xsd:element name="Time" minOccurs="0" maxOccurs="1" type="xsd:time"/>
           <xsd:element name="Venue" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
@@ -373,6 +371,8 @@
           <xsd:element name="IsHomeForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           <xsd:element name="IsAwayForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           <xsd:element name="MatchDetails" minOccurs="0" maxOccurs="1" type="tns:TeamMatchDetailsEntryType"/>
+          <xsd:element name="DivisionId" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="DivisionCategory" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
         </xsd:all>
       </xsd:complexType>
       <xsd:complexType name="TeamMatchPlayerListType">
