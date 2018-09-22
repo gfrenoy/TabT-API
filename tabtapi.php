@@ -886,7 +886,8 @@ EOQ;
         array('DivisionName' => $divisionname),
       array(
         'MatchId'      => $db->Record['MatchId'],
-        'WeekName'     => $db->Record['WeekName']
+        'WeekName'     => $db->Record['WeekName'],
+        'TeamMatchEntryType' => $db->Record['TeamMatchEntryType']
       ),
       $db->Record['Date'] == '-' ?
         array() :
