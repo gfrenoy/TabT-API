@@ -645,7 +645,9 @@ SELECT
   next_wname.name as `NextWeekName`,
   prev_wname.name as `PrevWeekName`,
   divr.home_wo='Y' OR team_home.is_withdraw<>'N' as `HomeFF`,
-  divr.away_wo='Y' OR team_away.is_withdraw<>'N' as `AwayFF`
+  divr.away_wo='Y' OR team_away.is_withdraw<>'N' as `AwayFF`,
+  team_home.is_withdraw as `HomeWithdrawn`,
+  team_away.is_withdraw as `AwayWithdrawn`
   {$details_select_clause}
 FROM
  (divisioninfo as di,
@@ -917,7 +919,9 @@ EOQ;
         array(),
       array(
         'IsHomeForfeited' => $db->Record['HomeFF'],
-        'IsAwayForfeited' => $db->Record['AwayFF']
+        'IsAwayForfeited' => $db->Record['AwayFF'],
+        'IsHomeWithdrawn' => $db->Record['HomeWithdrawn'],
+        'IsAwayWithdrawn' => $db->Record['AwayWithdrawn']
       ),
       $WithDetails ?
         array('MatchDetails' => $resDetails) :

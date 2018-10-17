@@ -1359,18 +1359,42 @@ class TeamMatchEntry
   public $PreviousWeekName;
 
   /**
-   * Indicates if the home team was not able to play the match and is forced to forteit the game. 
+   * Indicates if the home team was not able to play the match and is forced to forteit the game.
    *
    * @b type:  boolean
    */
   public $IsHomeForfeited;
 
   /**
-   * Indicates if the away team was not able to play the match and is forced to forteit the game. 
+   * Indicates if the away team was not able to play the match and is forced to forteit the game.
    *
    * @b type:  boolean
    */
   public $IsAwayForfeited;
+
+  /**
+   * Indicates if the home team has completely withdrawn from the current competetion.
+   * Possible values are:
+   *  N: no (default)
+   *  Y: yes
+   *  1: yes, during the first part of the competition
+   *  2: yes, during the second part of the competition
+   *
+   * @b type:  string
+   */
+  public $IsHomeWithdrawn;
+
+  /**
+   * Indicates if the away team has completely withdrawn from the current competetion.
+   * Possible values are:
+   *  N: no (default)
+   *  Y: yes
+   *  1: yes, during the first part of the competition
+   *  2: yes, during the second part of the competition
+   *
+   * @b type:  string
+   */
+  public $IsAwayWithdrawn;
 
   /**
    * Details about the team match (among others: when it has been played, who did played and the list of individual games)

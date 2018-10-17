@@ -373,6 +373,8 @@
           <xsd:element name="MatchDetails" minOccurs="0" maxOccurs="1" type="tns:TeamMatchDetailsEntryType"/>
           <xsd:element name="DivisionId" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="DivisionCategory" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="IsHomeWithdrawn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="IsAwayWithdrawn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
         </xsd:all>
       </xsd:complexType>
       <xsd:complexType name="TeamMatchPlayerListType">

@@ -218,6 +218,8 @@ function _EndAPI() {
       list($GLOBALS['api_consumed'], $GLOBALS['api_quota'], $GLOBALS['api_remaining_quota']) = _GetQuota();
     }
   }
+
+  $db->select_one("LOCK TABLES apicurrentquota WRITE");
   if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}") == 0) {
     // Very first call
     $db->select_one("INSERT INTO apicurrentquota (id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
@@ -227,6 +229,7 @@ function _EndAPI() {
     $GLOBALS['api_quota']     = $GLOBALS['api_remaining_quota'] + $time;
     $db->select_one("UPDATE apicurrentquota SET lastused={$GLOBALS['api_starttime']}, consumed={$GLOBALS['api_consumed']}, quota={$GLOBALS['api_quota']} WHERE id={$GLOBALS['api_caller']}");
   }
+  $db->select_one("UNLOCK TABLES");
 
   unset($db);
 
