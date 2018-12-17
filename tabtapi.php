@@ -1273,7 +1273,7 @@ EOQ;
       }
 
       // For admins and members of 
-      if (count(array_intersect($permissions, array('admin', 'classement'))) > 0) {
+      if (count(array_intersect($permissions, array('admin', 'classement'))) > 0 || $GLOBALS['auth']->auth['pid'] === $entry['UniqueIndex']) {
         foreach ($ranking_methods as $ranking_method) {
           $entry['RankingPointsCount']++;
           $entry['RankingPointsEntries'][] = array(
