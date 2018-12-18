@@ -40,18 +40,20 @@ SELECT
   a.player_id,
   pc.club_id,
   cc_reg.id as region_category,
-  cc_reg.main_level as region_level
+  cc_reg.main_level as region_level,
+  pi.vttl_index as unique_index
 FROM
   auth_user as a
   LEFT JOIN active_sessions s ON s.sid=a.user_id
   LEFT JOIN playerclub pc ON a.player_id=pc.player_id
   LEFT JOIN clubs as c ON c.id=pc.club_id
+  LEFT JOIN playerinfo as pi ON a.player_id=pi.id
   LEFT JOIN clubcategories as cc_reg ON CONCAT(',', cc_reg.group, ',') LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
 WHERE
   a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id)
 ORDER BY pc.season DESC;
 EOQ;
-    list($permissions, $session_id, $player_id, $club_id, $region, $region_level) = $db->select_one_array(utf8_decode($q));
+    list($permissions, $session_id, $player_id, $club_id, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
   }
 
   // If valid account, try to retrieve the preferred language of
@@ -76,7 +78,7 @@ EOQ;
       $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
       $levels[] = $region_level;
 
-      $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id, 'region' => $region, 'region_levels' => $levels);
+      $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id, 'region' => $region, 'region_levels' => $levels, 'unique_index' => $unique_index);
 
       if ($OnBehalfOf > 0) {
         $season = $db->select_one("SELECT max(id) FROM seasoninfo");
