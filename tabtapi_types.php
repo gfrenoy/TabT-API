@@ -55,7 +55,9 @@ class CredentialsType {
   public $Password;
 
   /**
-   * For administrators, given them the option to send request on behalf of another user.
+   * Unique index of the member to be used when executing the current request.
+   * 
+   * For administrators, give them the option to send request on behalf of another user.
    * This can be interesting to make sure comments and other actions are recorded under the correct identity.
    *
    * @b type: int
@@ -1805,6 +1807,25 @@ class CommentEntryType {
    * @b type: string
    */ 
   public $Comment;
+
+  /**
+   * The type of comments
+   * 
+   * The follow codes indicate the type of comment that is returned in this comment entry:
+   *  DC = Automatic comment when the match sheet has been created
+   *  DM = Automatic comment when match sheet has been modified
+   *  DD = Automatic comment when match sheet has been deleted
+   *  V  = Automatic comment when the match has been validated
+   *  S  = Automatic comment when the team score of the match has been modified
+   *  HW = Automatic comment when W-O status of the home team has been changed
+   *  AW = Automatic comment when W-O status of the away team has been changed
+   *  FF = Automatic comment when withdraw status of a team has been changed
+   *  UC = User comment
+   *  CD = Automatic comment when a user comment has been deleted
+   * 
+   * @b type: string
+   */ 
+  public $Code;
 }
 
 /**

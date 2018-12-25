@@ -11,6 +11,8 @@ $GLOBALS['site_info'] = array(
    'db_user'     => 'tabtuser',
    'db_password' => 'tabtpass',
    // Current season
-   'season'      => 17
+   'season'      => 17,
+   // If set to true, user can see query their own ranking information
+   'allow_own_ranking_info' => false
 );
 ?>

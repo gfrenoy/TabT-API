@@ -390,6 +390,7 @@
           <xsd:element name="Timestamp" type="xsd:dateTime"/>
           <xsd:element name="Author" type="tns:MemberEntryType"/>
           <xsd:element name="Comment" type="xsd:string"/>
+          <xsd:element name="Code" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="MemberEntryType">

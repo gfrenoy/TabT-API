@@ -551,7 +551,11 @@ function GetMatches(stdClass $Request) {
   // by name
   $match_where_clause = '1';
   if ($MatchId != '') {
-    $match_where_clause = "{$matchnum_select} LIKE '{$MatchId}'";
+    // First try to get match number from the cache (if any)
+    $MatchUniqueId = get_match_id_from_match_number($Season, $MatchId);
+    if ($MatchUniqueId <= 0) {
+      $match_where_clause = "{$matchnum_select} LIKE '{$MatchId}'";
+    }
   }
   // by internal id
   $uniquematch_where_clause = '1';
@@ -578,7 +582,7 @@ function GetMatches(stdClass $Request) {
     $details_select_clause .= ",pi_ref.vttl_index as `Referee`";
     $details_select_clause .= ",pi_rr.vttl_index as `HallCommissioner`";
     if ($MatchUniqueId > 0) {
-      $details_select_clause .= ",IF(mc.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mc.id, '§', mc.date, '§', pi_authors.vttl_index, '§', pi_authors.first_name, '§', pi_authors.last_name, '§', REPLACE(REPLACE(mc.message, '§', '{$GLOBALS['escape_separators']['§']}'), 'µ', '{$GLOBALS['escape_separators']['µ']}')) ORDER BY mc.date DESC SEPARATOR 'µ')) as `MatchComments`";
+      $details_select_clause .= ",IF(mc.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mc.id, '§', mc.date, '§', mc.modification_type, '§', pi_authors.vttl_index, '§', pi_authors.first_name, '§', pi_authors.last_name, '§', REPLACE(REPLACE(mc.message, '§', '{$GLOBALS['escape_separators']['§']}'), 'µ', '{$GLOBALS['escape_separators']['µ']}')) ORDER BY mc.date DESC SEPARATOR 'µ')) as `MatchComments`";
     }
 
     $details_from_clause  = " LEFT JOIN matchinfo as mi ON mi.id=divr.match_id";
@@ -597,7 +601,7 @@ function GetMatches(stdClass $Request) {
 
     foreach (array('home', 'away') as $homeaway) {
       $classement_select_clause = get_classement_select_clause($homeaway . '_ci');
-      $details_select_clause .= ",IF(mi.id IS NULL, '', GROUP_CONCAT(CONCAT(mp.player_nb, '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.vttl_index, mp.{$homeaway}_player_id), '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.first_name, ''), '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.last_name, ''), '|', IF(mp.player_nb<=mti.nb_single, {$classement_select_clause}, ''), '|', mp.{$homeaway}_vict, '|', mp.{$homeaway}_wo) ORDER BY mp.player_nb)) as `" . ucfirst($homeaway) . "Players`";
+      $details_select_clause .= ",IF(mi.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mp.player_nb, '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.vttl_index, mp.{$homeaway}_player_id), '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.first_name, ''), '|', IF(mp.player_nb<=mti.nb_single, {$homeaway}_pi.last_name, ''), '|', IF(mp.player_nb<=mti.nb_single, {$classement_select_clause}, ''), '|', mp.{$homeaway}_vict, '|', mp.{$homeaway}_wo) ORDER BY mp.player_nb)) as `" . ucfirst($homeaway) . "Players`";
 
       $details_from_clause .= " LEFT JOIN playerinfo as {$homeaway}_pi ON {$homeaway}_pi.id=mp.{$homeaway}_player_id LEFT JOIN playerclassement as {$homeaway}_pcl ON {$homeaway}_pcl.season=di.season AND {$homeaway}_pcl.player_id={$homeaway}_pi.id AND {$homeaway}_pcl.category=divc.classementcategory LEFT JOIN classementinfo as {$homeaway}_ci ON {$homeaway}_ci.id={$homeaway}_pcl.classement_id AND {$homeaway}_ci.category=divc.classementcategory";
     }
@@ -735,7 +739,7 @@ EOQ;
           $resDetails['CommentEntries'] = array();
         }
         foreach ($comments as $comment_str) {
-          list($comment_id, $timestamp, $author_id, $author_first_name, $author_last_name, $comment) = explode('§', $comment_str);
+          list($comment_id, $timestamp, $type, $author_id, $author_first_name, $author_last_name, $comment) = explode('§', $comment_str);
           $comment = str_replace(array_keys($escape_separators), array_values($escape_separators), $comment);
           $resDetails['CommentEntries'][] = array(
             'Timestamp' => $timestamp,
@@ -744,7 +748,8 @@ EOQ;
               'FirstName'   => $author_first_name,
               'LastName'    => $author_last_name
             ),
-            'Comment'   => $comment
+            'Comment'   => $comment,
+            'Code'      => $type
           );
         }
       }

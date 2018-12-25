@@ -35,6 +35,7 @@ function _GetPermissions($Credentials) {
   if ($Account != '') {
     $q = <<<EOQ
 SELECT
+  a.user_id,
   a.perms,
   s.sid,
   a.player_id,
@@ -49,11 +50,14 @@ FROM
   LEFT JOIN clubs as c ON c.id=pc.club_id
   LEFT JOIN playerinfo as pi ON a.player_id=pi.id
   LEFT JOIN clubcategories as cc_reg ON CONCAT(',', cc_reg.group, ',') LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
-WHERE
-  a.username='{$Account}' AND a.password=MD5('{$Password}') AND ISNULL(a.conf_id)
+WHERE 1
+  AND a.username='{$Account}'
+  AND a.password=MD5('{$Password}')
+  AND ISNULL(a.conf_id)
+  AND (ISNULL(a.restrict_to_ip) OR a.restrict_to_ip={$GLOBALS['api_caller_ip']})
 ORDER BY pc.season DESC;
 EOQ;
-    list($permissions, $session_id, $player_id, $club_id, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
+    list($user_id, $permissions, $session_id, $player_id, $club_id, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
   }
 
   // If valid account, try to retrieve the preferred language of
@@ -72,18 +76,55 @@ EOQ;
     unset($session_access);
 
     // Create dummy "Perm" object for TabT functions that are using it
-    if (is_string($permissions) && $region && is_numeric($region)) {
+    if (is_string($permissions)) {
       $GLOBALS['perm'] = new HurriPerm();
       $GLOBALS['auth'] = new Auth();
-      $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
-      $levels[] = $region_level;
 
-      $GLOBALS['auth']->auth = array('perm' => $permissions, 'pid' => $player_id, 'club_id' => $club_id, 'region' => $region, 'region_levels' => $levels, 'unique_index' => $unique_index);
+      if ($region && is_numeric($region)) {
+        $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
+        $levels[] = $region_level;
+      } else {
+        $levels = array();
+        $region = 0;
+        $club_id = 0;
+      }
 
+      // Populate the authorization object with information about the connected user
+      $GLOBALS['auth']->auth = array(
+        'uid' => $user_id,
+        'perm' => $permissions,
+        'pid' => $player_id,
+        'club_id' => $club_id,
+        'region' => $region,
+        'region_levels' => $levels,
+        'unique_index' => $unique_index
+      );
+
+      // Did the user ask to act on behalf of another user ?
       if ($OnBehalfOf > 0) {
         $season = $db->select_one("SELECT max(id) FROM seasoninfo");
-        list($requested_player_id, $requested_club_category, $requested_permissions) = $db->select_one_array("SELECT pi.id, c.category, IFNULL(a.perms, 'user') FROM playerinfo as pi LEFT JOIN playerclub pc ON pc.season={$season} AND pc.player_id=pi.id LEFT JOIN clubs as c ON c.id=pc.club_id LEFT JOIN auth_user a ON a.player_id=pi.id WHERE pi.vttl_index={$OnBehalfOf}");
+        $q = <<<EOQ
+SELECT
+  IFNULL(a.user_id, ''),
+  IFNULL(a.perms, 'user'),
+  pi.id,
+  pc.club_id,
+  c.category,
+  cc_reg.id as region_category,
+  cc_reg.main_level as region_level,
+  pi.vttl_index as unique_index
+FROM
+  playerinfo as pi
+  LEFT JOIN auth_user as a ON a.player_id=pi.id
+  LEFT JOIN playerclub pc ON pc.season={$season} AND pc.player_id=pi.id
+  LEFT JOIN clubs as c ON c.id=pc.club_id
+  LEFT JOIN clubcategories as cc_reg ON CONCAT(',', cc_reg.group, ',') LIKE CONCAT('%%,', c.category, ',%%') AND NOT ISNULL(cc_reg.main_level)
+WHERE 1
+  AND pi.vttl_index={$OnBehalfOf}
+ORDER BY pc.season DESC;
+EOQ;
 
+        list($requested_user_id, $requested_permissions, $requested_player_id, $requested_club_id, $requested_club_category, $requested_region_category, $requested_region_level, $requested_unique_index) = $db->select_one_array($q);
         if ($requested_player_id > 0) {
           $permissions_array = explode(',', $permissions);
           if (count(array_intersect($permissions_array, array('region', 'admin'))) == 0) {
@@ -105,9 +146,27 @@ EOQ;
             );
             unset($permissions);
           } else {
-            // Override user/permissions
-            $GLOBALS['auth']->auth['pid']  = $requested_player_id;
-            $GLOBALS['auth']->auth['perm'] = $requested_permissions;
+            $requested_region_levels = array();
+            if ($requested_region_category && is_numeric($requested_region_category)) {
+              $requested_region_levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$requested_region_category}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
+              $requested_region_levels[] = $requested_region_level;
+            }
+
+            // Override user permissions
+            if ($requested_user_id != '') {
+              $GLOBALS['auth']->auth['uid'] = $requested_user_id;
+            } else {
+              // The requested player does not have an account
+              // This likely will cause some issues but better to remove than using the one of the admin user
+              // Should we automatically create a new account ?  Or should we have a "temporary" account ?
+              unset($GLOBALS['auth']->auth['uid']);
+            }
+            $GLOBALS['auth']->auth['pid']           = $requested_player_id;
+            $GLOBALS['auth']->auth['perm']          = $requested_permissions;
+            $GLOBALS['auth']->auth['club_id']       = $requested_club_id;
+            $GLOBALS['auth']->auth['region']        = $requested_region_category;
+            $GLOBALS['auth']->auth['region_levels'] = $requested_region_levels;
+            $GLOBALS['auth']->auth['unique_index']  = $requested_unique_index;
           }
         } else {
           $GLOBALS['permission_error'] = array(
