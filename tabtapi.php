@@ -1277,8 +1277,21 @@ EOQ;
         );
       }
 
-      // For admins and members of 
-      if (count(array_intersect($permissions, array('admin', 'classement'))) > 0 || (isset($GLOBALS['site_info']['allow_own_ranking_info']) && $GLOBALS['site_info']['allow_own_ranking_info'] && $GLOBALS['auth']->auth['unique_index'] === $entry['UniqueIndex'])) {
+      // Only admins and users with the 'classement' permission can access to all evaluations
+      $allow_ranking_info = count(array_intersect($permissions, array('admin', 'classement'))) > 0;
+
+      // If you are not an admin, if flag 'allow_own_ranking_info' is set to true in the site configuration, one can access his/her own ranking evaluation
+      // If allow_own_ranking_info gives an array, the user's club category must be in that array to be allowed
+      if (!$allow_ranking_info && isset($GLOBALS['site_info']['allow_own_ranking_info']) && $GLOBALS['site_info']['allow_own_ranking_info'] !== false && $GLOBALS['auth']->auth['unique_index'] === $entry['UniqueIndex']) {
+        if ($GLOBALS['site_info']['allow_own_ranking_info'] === true) {
+          $allow_ranking_info = true;
+        } elseif (is_array($GLOBALS['site_info']['allow_own_ranking_info']) && in_array($GLOBALS['auth']->auth['club_category'], $GLOBALS['site_info']['allow_own_ranking_info'])) {
+          $allow_ranking_info = true;
+        }
+      }
+
+      // Add results if allowed
+      if ($allow_ranking_info) {
         foreach ($ranking_methods as $ranking_method) {
           $entry['RankingPointsCount']++;
           $entry['RankingPointsEntries'][] = array(

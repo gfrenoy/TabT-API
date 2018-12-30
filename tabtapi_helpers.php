@@ -40,6 +40,7 @@ SELECT
   s.sid,
   a.player_id,
   pc.club_id,
+  c.category as club_category,
   cc_reg.id as region_category,
   cc_reg.main_level as region_level,
   pi.vttl_index as unique_index
@@ -57,7 +58,7 @@ WHERE 1
   AND (ISNULL(a.restrict_to_ip) OR a.restrict_to_ip={$GLOBALS['api_caller_ip']})
 ORDER BY pc.season DESC;
 EOQ;
-    list($user_id, $permissions, $session_id, $player_id, $club_id, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
+    list($user_id, $permissions, $session_id, $player_id, $club_id, $club_category, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
   }
 
   // If valid account, try to retrieve the preferred language of
@@ -95,6 +96,7 @@ EOQ;
         'perm' => $permissions,
         'pid' => $player_id,
         'club_id' => $club_id,
+        'club_category' => $club_category,
         'region' => $region,
         'region_levels' => $levels,
         'unique_index' => $unique_index
@@ -164,6 +166,7 @@ EOQ;
             $GLOBALS['auth']->auth['pid']           = $requested_player_id;
             $GLOBALS['auth']->auth['perm']          = $requested_permissions;
             $GLOBALS['auth']->auth['club_id']       = $requested_club_id;
+            $GLOBALS['auth']->auth['club_category'] = $requested_club_category;
             $GLOBALS['auth']->auth['region']        = $requested_region_category;
             $GLOBALS['auth']->auth['region_levels'] = $requested_region_levels;
             $GLOBALS['auth']->auth['unique_index']  = $requested_unique_index;
