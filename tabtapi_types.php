@@ -653,7 +653,9 @@ class GetMembersRequest
    * Returns extended information about the member's new ranking evaluations.
    *
    * If set to "true", valid credential has to be specified.
-   * The number and level of details of the returned new ranking evaluations depend on the credential access rights.
+   *
+   * The number and level of details of the returned new ranking evaluations depend on the credential access rights and local
+   * configuration option "option allow_own_ranking_info".
    *
    * This parameter is optional.  Default value is false.
    *

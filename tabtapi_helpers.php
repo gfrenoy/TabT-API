@@ -164,7 +164,7 @@ EOQ;
               unset($GLOBALS['auth']->auth['uid']);
             }
             $GLOBALS['auth']->auth['pid']           = $requested_player_id;
-            $GLOBALS['auth']->auth['perm']          = $requested_permissions;
+            $GLOBALS['auth']->auth['perm']          = $permissions = $requested_permissions;
             $GLOBALS['auth']->auth['club_id']       = $requested_club_id;
             $GLOBALS['auth']->auth['club_category'] = $requested_club_category;
             $GLOBALS['auth']->auth['region']        = $requested_region_category;
