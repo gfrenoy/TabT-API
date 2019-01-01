@@ -279,9 +279,9 @@ function GetDivisionRanking(stdClass $Request) {
   $permissions = _MethodAPI(4, isset($Request->Credentials) ? $Request->Credentials : (object)array());
 
   // Extract function arguments
-  $DivisionId    = $Request->DivisionId;
-  $WeekName      = trim($Request->WeekName);
-  $RankingSystem = $Request->RankingSystem;
+  $DivisionId    = isset($Request->DivisionId) ? $Request->DivisionId : -1;
+  $WeekName      = isset($Request->WeekName) ? trim($Request->WeekName) : '';
+  $RankingSystem = isset($Request->RankingSystem) ? $Request->RankingSystem : '';
 
   // Create database session
   $db = new DB_Session();
@@ -386,17 +386,17 @@ function GetMatches(stdClass $Request) {
   $permissions = _MethodAPI(5, isset($Request->Credentials) ? $Request->Credentials : (object)array());
 
   // Extract function arguments
-  $DivisionId       = $Request->DivisionId;
-  $Club             = trim($Request->Club);
-  $Team             = trim(strtoupper($Request->Team));
-  $DivisionCategory = $Request->DivisionCategory;
-  $Season           = trim($Request->Season);
-  $WeekName         = trim($Request->WeekName);
-  $LevelId          = $Request->Level;
-  $ShowDivisionName = strtolower(trim($Request->ShowDivisionName));
+  $DivisionId       = isset($Request->DivisionId) ? $Request->DivisionId : '';
+  $Club             = isset($Request->Club) ? trim($Request->Club) : '';
+  $Team             = isset($Request->Team) ? trim(strtoupper($Request->Team)) : '';
+  $DivisionCategory = isset($Request->DivisionCategory) ? $Request->DivisionCategory : '';
+  $Season           = isset($Request->Season) ? trim($Request->Season) : '';
+  $WeekName         = isset($Request->WeekName) ? trim($Request->WeekName) : '';
+  $LevelId          = isset($Request->Level) ? $Request->Level : '';
+  $ShowDivisionName = isset($Request->ShowDivisionName) ? strtolower(trim($Request->ShowDivisionName)) : '';
   if (isset($Request->YearDateFrom)) $YearDateFrom = strtotime($Request->YearDateFrom);
   if (isset($Request->YearDateTo))   $YearDateTo   = strtotime($Request->YearDateTo);
-  if (isset($Request->WithDetails))  $WithDetails  = $Request->WithDetails ? true : false;
+  $WithDetails      = isset($Request->WithDetails) && $Request->WithDetails ? true : false;
   $MatchId          = isset($Request->MatchId) ? mysql_real_escape_string(trim($Request->MatchId)) : '';
   $MatchUniqueId    = isset($Request->MatchUniqueId) && is_numeric($Request->MatchUniqueId) && $Request->MatchUniqueId > 0 ? intval(trim($Request->MatchUniqueId)) : 0;
 
@@ -582,7 +582,7 @@ function GetMatches(stdClass $Request) {
     $details_select_clause .= ",pi_ref.vttl_index as `Referee`";
     $details_select_clause .= ",pi_rr.vttl_index as `HallCommissioner`";
     if ($MatchUniqueId > 0) {
-      $details_select_clause .= ",IF(mc.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mc.id, '§', mc.date, '§', mc.modification_type, '§', pi_authors.vttl_index, '§', pi_authors.first_name, '§', pi_authors.last_name, '§', REPLACE(REPLACE(mc.message, '§', '{$GLOBALS['escape_separators']['§']}'), 'µ', '{$GLOBALS['escape_separators']['µ']}')) ORDER BY mc.date DESC SEPARATOR 'µ')) as `MatchComments`";
+      $details_select_clause .= ",IF(mc.id IS NULL, '', GROUP_CONCAT(DISTINCT CONCAT(mc.id, '§', mc.date, '§', mc.modification_type, '§', pi_authors.vttl_index, '§', pi_authors.first_name, '§', pi_authors.last_name, '§', REPLACE(REPLACE(mc.message, '§', '{$escape_separators['§']}'), 'µ', '{$escape_separators['µ']}')) ORDER BY mc.date DESC SEPARATOR 'µ')) as `MatchComments`";
     }
 
     $details_from_clause  = " LEFT JOIN matchinfo as mi ON mi.id=divr.match_id";
@@ -980,15 +980,15 @@ function GetMembers(stdClass $Request) {
   include_once($GLOBALS['site_info']['path'].'public/players_fct.php');
 
   // Extract function arguments
-  $Club                     = trim($Request->Club);
-  $Season                   = trim($Request->Season);
-  $PlayerCategory           = $Request->PlayerCategory;
-  $UniqueIndex              = $Request->UniqueIndex;
-  $NameSearch               = $Request->NameSearch;
-  $ExtendedInformation      = $Request->ExtendedInformation ? true : false;
-  $RankingPointsInformation = $Request->RankingPointsInformation ? true : false;
-  $WithResults              = $Request->WithResults ? true : false;
-  $OppRankingEvaluation     = $Request->WithOpponentRankingEvaluation ? true : false;
+  if (isset($Request->Season))         $Season         = trim($Request->Season);
+  if (isset($Request->PlayerCategory)) $PlayerCategory = $Request->PlayerCategory;
+  if (isset($Request->UniqueIndex))    $UniqueIndex    = $Request->UniqueIndex;
+  if (isset($Request->NameSearch))     $NameSearch     = $Request->NameSearch;
+  $Club                     = isset($Request->Club) ? trim($Request->Club) : '';
+  $ExtendedInformation      = isset($Request->ExtendedInformation) && $Request->ExtendedInformation ? true : false;
+  $RankingPointsInformation = isset($Request->RankingPointsInformation) && $Request->RankingPointsInformation ? true : false;
+  $WithResults              = isset($Request->WithResults) && $Request->WithResults ? true : false;
+  $OppRankingEvaluation     = isset($Request->WithOpponentRankingEvaluation) && $Request->WithOpponentRankingEvaluation ? true : false;
 
   // Create database session
   $db = new DB_Session();
@@ -1046,7 +1046,7 @@ function GetMembers(stdClass $Request) {
 
   // Extract club category
   $select_index_clause = '';
-  if (is_numeric($ClubId))
+  if (isset($ClubId) && is_numeric($ClubId))
   {
     $ClubCategory = $db->select_one("SELECT category FROM clubs WHERE id={$ClubId}");
 
@@ -1242,7 +1242,7 @@ EOQ;
     $entry = array_merge(
       1||$db->Record['status'] != 'L' ? array('Position' => ++$position) : array(),
       array('UniqueIndex' => $db->Record['unique_index']),
-      1||$db->Record['status'] != 'L' ? array('RankingIndex' => $db->Record['ranking_index']) : array(),
+      1||$db->Record['status'] != 'L' ? array('RankingIndex' => isset($db->Record['ranking_index']) ? $db->Record['ranking_index'] : '') : array(),
       array(
         'FirstName' => $db->Record['first_name'],
         'LastName'  => $db->Record['last_name'],
@@ -1411,7 +1411,7 @@ function Upload(stdClass $Request) {
     'Result'             => count($errors)==0,
     'ProcessedLineCount' => $processed_line_count
   );
-  if (!$res->Result) {
+  if (!$res['Result']) {
     $res['ErrorLines'] = array();
     foreach ($errors as $error) $res['ErrorLines'][] = $error;
   }
@@ -1618,7 +1618,7 @@ function GetDivisions(stdClass $Request) {
   }
 
   // Prepare some clause to filter the list
-  $level_where_clause = is_numeric($LevelId) ? "di.level IN (" . implode(',', $Levels) . ")" : '1';
+  $level_where_clause = isset($LevelId) && is_numeric($LevelId) ? "di.level IN (" . implode(',', $Levels) . ")" : '1';
 
   // Prepare query to retrieve all divisions matching the given criteria
   $q = <<<EOQ
@@ -1832,8 +1832,8 @@ EOQ;
           'Name'        => $serie_name
         );
         if ($WithResults) {
-          $SerieEntry['ResultCount'] = count($results[$serie_id]);
-          if (count($results[$serie_id]) > 0) {
+          $SerieEntry['ResultCount'] = isset($results[$serie_id]) ? count($results[$serie_id]) : 0;
+          if ($SerieEntry['ResultCount'] > 0) {
             $SerieEntry['ResultEntries'] = $results[$serie_id];
           }
         }
@@ -1909,16 +1909,18 @@ EOQ;
   while ($db->next_record()) {
     $defEntries = array();
     foreach (explode(',', $db->Record['game_list']) as $k => $data) {
-      list($Position, $Type, $HomePlayerIndex, $AwayPlayerIndex, $AllowSubstitute) = explode('|', $data);
-      $defEntries[] = array_merge(
-        array(
-          'Position'=> $Position,
-          'Type'    => $Type
-        ),
-        $HomePlayerIndex > 0 && $Type == 1 ? array('HomePlayerIndex' => $HomePlayerIndex) : array(),
-        $AwayPlayerIndex > 0 && $Type == 1 ? array('AwayPlayerIndex' => $AwayPlayerIndex) : array(),
-        $db->Record['nb_substitutes'] > 0 ? array('AllowSubstitute' => $AllowSubstitute == 'Y') : array()
-      );
+      if (trim($data) != '') {
+        list($Position, $Type, $HomePlayerIndex, $AwayPlayerIndex, $AllowSubstitute) = explode('|', $data);
+        $defEntries[] = array_merge(
+          array(
+            'Position'=> $Position,
+            'Type'    => $Type
+          ),
+          $HomePlayerIndex > 0 && $Type == 1 ? array('HomePlayerIndex' => $HomePlayerIndex) : array(),
+          $AwayPlayerIndex > 0 && $Type == 1 ? array('AwayPlayerIndex' => $AwayPlayerIndex) : array(),
+          $db->Record['nb_substitutes'] > 0 ? array('AllowSubstitute' => $AllowSubstitute == 'Y') : array()
+        );
+      }
     }
 
     $matchSystemEntry = array(

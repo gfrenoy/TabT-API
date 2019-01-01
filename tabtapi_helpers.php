@@ -61,6 +61,13 @@ EOQ;
     list($user_id, $permissions, $session_id, $player_id, $club_id, $club_category, $region, $region_level, $unique_index) = $db->select_one_array(utf8_decode($q));
   }
 
+  // Create dummy "Perm" & "Auth" objects for TabT functions that are using it
+  $GLOBALS['perm'] = new HurriPerm();
+  $GLOBALS['auth'] = new Auth();
+  $GLOBALS['auth']->auth = array(
+    'pid' => 0
+  );
+
   // If valid account, try to retrieve the preferred language of
   // the connected user
   if (isset($permissions) && is_string($permissions)) {
@@ -76,11 +83,8 @@ EOQ;
     }
     unset($session_access);
 
-    // Create dummy "Perm" object for TabT functions that are using it
+    // If some permissions are allowed, update "Auth" object accordingly
     if (is_string($permissions)) {
-      $GLOBALS['perm'] = new HurriPerm();
-      $GLOBALS['auth'] = new Auth();
-
       if ($region && is_numeric($region)) {
         $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
         $levels[] = $region_level;
@@ -187,7 +191,7 @@ EOQ;
 
   unset($db);
 
- return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);
+  return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);
 }
 
 /** 
