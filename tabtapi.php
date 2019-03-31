@@ -639,7 +639,13 @@ SELECT
         '{$GLOBALS['str_UnknownTeam']}'), 
      CONCAT(IFNULL(club_away.short_name, club_away.name), ' ', team_away.indice)
     ) as `AwayTeam`,
-  IF(ISNULL(club_home.name), 0, team_home.address_id) as `Venue`,
+  IF(ISNULL(club_home.name), 0, cai.address_id) as `Venue`,
+  cai_club.indice as `VenueClub`,
+  cai.name as `VenueEntryName`,
+  cai.address as `VenueEntryStreet`,
+  CONCAT(cai.zip, ' ', cai.town) as `VenueEntryTown`,
+  cai.phone as `VenueEntryPhone`,
+  cai.comment as `VenueEntryComment`,
   IF(team_home.is_bye OR team_away.is_bye OR
      IFNULL(divr.home=0 AND divr.away=0 AND divr.home_wo<>'Y' AND divr.away_wo<>'Y' AND divr.score_modified<>'Y' AND team_home.is_withdraw='N' AND team_away.is_withdraw='N', 1),
    '-',
@@ -683,6 +689,11 @@ LEFT JOIN divisionresults as divr
           divr.season=di.season and
           divr.week=cali.week and
           divr.match_nb=cali.match_nb
+LEFT JOIN clubaddressinfo as cai
+       ON cai.club_id=IFNULL(cc.address_club_id, team_home.club_id) and
+          cai.address_id=IFNULL(cc.address_id, team_home.address_id)
+LEFT JOIN clubs as cai_club
+       ON cai_club.id=cai.club_id
 LEFT JOIN levelinfo as li
        ON li.id=di.level
 {$details_from_clause}
@@ -903,7 +914,18 @@ EOQ;
           'Time'  => $db->Record['Time']
         ),
       $db->Record['Date'] != '-' && is_numeric($db->Record['Venue']) && $db->Record['Venue']>=1 ?
-        array('Venue' => $db->Record['Venue']) : array(),
+        array(
+          'Venue'      => $db->Record['Venue'],
+          'VenueClub'  => $db->Record['VenueClub'],
+          'VenueEntry' => array(
+            'Name'      => $db->Record['VenueEntryName'],
+            'Street'    => $db->Record['VenueEntryStreet'],
+            'Town'      => $db->Record['VenueEntryTown'],
+            'Phone'     => $db->Record['VenueEntryPhone'],
+            'Comment'   => $db->Record['VenueEntryComment']
+          )
+        ) :
+        array(),
       array(
         'HomeClub'  => $db->Record['HomeClub'],
         'HomeTeam'  => $db->Record['HomeTeam'],

@@ -360,6 +360,8 @@
           <xsd:element name="Date" minOccurs="0" maxOccurs="1" type="xsd:date"/>
           <xsd:element name="Time" minOccurs="0" maxOccurs="1" type="xsd:time"/>
           <xsd:element name="Venue" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="VenueClub" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="VenueEntry" minOccurs="0" maxOccurs="1" type="tns:VenueEntryType"/>
           <xsd:element name="HomeClub" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="HomeTeam" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="AwayClub" maxOccurs="1" type="xsd:string"/>
