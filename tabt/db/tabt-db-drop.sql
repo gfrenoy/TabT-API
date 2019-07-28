@@ -1,4 +1,4 @@
-
+SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS tournamentseries;
 DROP TABLE IF EXISTS tournaments;
 DROP TABLE IF EXISTS tournamentrounds;
@@ -82,3 +82,4 @@ DROP TABLE IF EXISTS apiuse;
 DROP TABLE IF EXISTS apiquota;
 DROP TABLE IF EXISTS apicurrentquota;
 DROP TABLE IF EXISTS active_sessions;
+SET FOREIGN_KEY_CHECKS=1;
