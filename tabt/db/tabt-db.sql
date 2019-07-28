@@ -50,7 +50,7 @@ CREATE TABLE `auth_user` (
   `conf_sent_on` timestamp NULL DEFAULT NULL,
   `conf_sent_to` varchar(60) COLLATE utf8_unicode_ci DEFAULT NULL,
   `restrict_to_ip` int(11) unsigned DEFAULT NULL,
-  `api_only` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+  `api_only` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `k_username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='List of authorized users';
@@ -61,6 +61,7 @@ CREATE TABLE `belcategoryinfo` (
   `id` int(4) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `factor` float unsigned NOT NULL,
+  `count_factor` tinyint(2) unsigned DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='List of categories for the ranking system ''BEL';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -82,8 +83,10 @@ CREATE TABLE `calendarchanges` (
   `time` time DEFAULT NULL,
   `home` tinyint(2) DEFAULT NULL,
   `away` tinyint(2) DEFAULT NULL,
+  `address_club_id` smallint(5) unsigned DEFAULT NULL,
+  `address_id` smallint(5) unsigned DEFAULT NULL,
   PRIMARY KEY (`div_id`,`week`,`match_nb`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -222,7 +225,7 @@ CREATE TABLE `clubfines` (
   `club_id` smallint(5) unsigned NOT NULL DEFAULT '0',
   `team_indice` char(1) COLLATE utf8_unicode_ci DEFAULT NULL,
   `week_name` char(3) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  `fine_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `fine_id` int(10) unsigned NOT NULL DEFAULT '0',
   `div_id` int(5) unsigned DEFAULT NULL,
   `match_nb` tinyint(1) unsigned DEFAULT NULL,
   `comment` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
@@ -270,7 +273,7 @@ CREATE TABLE `clubs` (
   `indice` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
   `site` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `admin_name` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `admin_mail` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `admin_mail` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `is_english` tinyint(1) unsigned DEFAULT '0',
   `is_french` tinyint(1) unsigned DEFAULT '0',
   `is_dutch` tinyint(1) unsigned DEFAULT '0',
@@ -330,6 +333,9 @@ CREATE TABLE `controlresults` (
   `season` tinyint(2) NOT NULL,
   `control_group_id` int(5) unsigned NOT NULL,
   `wname` varchar(3) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `div_id` int(10) unsigned DEFAULT NULL,
+  `match_nb` tinyint(1) unsigned DEFAULT NULL,
+  `match_id` int(10) unsigned DEFAULT NULL,
   `deviation_type` int(10) unsigned DEFAULT NULL,
   `data` blob,
   PRIMARY KEY (`id`),
@@ -360,7 +366,7 @@ CREATE TABLE `divisioninfo` (
   `order` mediumint(2) NOT NULL DEFAULT '1',
   `level` tinyint(1) unsigned NOT NULL DEFAULT '1',
   `category` tinyint(1) unsigned NOT NULL DEFAULT '1',
-  `calendar_id` int(5) unsigned NOT NULL DEFAULT '1',
+  `calendar_id` int(5) unsigned NOT NULL DEFAULT '0',
   `calendardate_id` mediumint(5) unsigned NOT NULL DEFAULT '1',
   `first_match_nb` smallint(6) DEFAULT '1',
   `match_type_id` tinyint(2) unsigned NOT NULL DEFAULT '0',
@@ -368,6 +374,9 @@ CREATE TABLE `divisioninfo` (
   `match_value` smallint(3) unsigned NOT NULL DEFAULT '100',
   `week_start_on` enum('-6','-5') COLLATE utf8_unicode_ci NOT NULL DEFAULT '-5',
   `is_youth_division` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
+  `min_age_category` tinyint(2) unsigned DEFAULT NULL,
+  `max_age_category` tinyint(2) unsigned DEFAULT NULL,
+  `min_nb_youth_players` tinyint(2) unsigned DEFAULT NULL,
   `extra_name` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
   `wo_as_vict` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `wo_is_one_point` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
@@ -383,6 +392,14 @@ CREATE TABLE `divisioninfo` (
   `auto_validation` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `responsible_id` int(10) unsigned DEFAULT NULL,
   `fixed_team` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
+  `promoted_teams` tinyint(2) unsigned DEFAULT NULL,
+  `relegated_teams` tinyint(2) unsigned DEFAULT NULL,
+  `team_score_limit_day` tinyint(2) unsigned DEFAULT NULL,
+  `team_score_limit_time` time DEFAULT NULL,
+  `detailed_score_limit_day` tinyint(2) unsigned DEFAULT NULL,
+  `detailed_score_limit_time` time DEFAULT NULL,
+  `detailed_score_limit_method` enum('Match','Week') COLLATE utf8_unicode_ci DEFAULT NULL,
+  `team_score_limit_method` enum('Match','Week') COLLATE utf8_unicode_ci DEFAULT NULL,
   `validated_by` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`,`season`),
   KEY `id` (`id`)
@@ -403,7 +420,7 @@ CREATE TABLE `divisionresults` (
   `home_wo` enum('N','Y') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `away_wo` enum('N','Y') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `score_modified` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
-  `validation_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `validation_timestamp` timestamp NULL DEFAULT NULL,
   `validated_by` int(5) unsigned DEFAULT NULL,
   `lock_type` enum('B','H','A','N') COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'B=Both, H=Home, A=Away, N (or NULL)=None',
   `lock_timestamp` timestamp NULL DEFAULT NULL,
@@ -422,24 +439,11 @@ CREATE TABLE `divisionresultslog` (
   `match_nb` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `modified_by` int(10) unsigned NOT NULL DEFAULT '0',
-  `modification_type` enum('S','M','HW','AW','FF','DC','DM','DD','CD','V','C','P','L','VA','UV') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'S',
-  `data` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `modification_type` enum('S','M','HW','AW','FF','DC','DM','DD','CD','V','C','P','L','VA','UV','VR') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'S',
+  `data` varchar(1000) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`div_id`,`season`,`week`,`match_nb`,`modified`,`modification_type`),
-  KEY `div_id` (`div_id`,`season`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `divisionroundinfo` (
-  `div_id` int(5) unsigned NOT NULL DEFAULT '0',
-  `season` tinyint(2) NOT NULL DEFAULT '0',
-  `week` tinyint(2) unsigned NOT NULL DEFAULT '0',
-  `name` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0',
-  `nb_team` int(5) unsigned NOT NULL DEFAULT '0',
-  `is_validated` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
-  `check_week` tinyint(2) unsigned NOT NULL DEFAULT '0',
-  `check_count` int(5) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`div_id`,`season`,`week`)
+  KEY `div_id` (`div_id`,`season`),
+  KEY `season_modified` (`season`,`modified`) USING BTREE
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -464,7 +468,7 @@ CREATE TABLE `divisionteaminfo` (
   `day_in_week` tinyint(3) DEFAULT '0',
   `hour` time DEFAULT '19:45:00',
   `max_team_value` int(3) unsigned DEFAULT NULL,
-  `start_points` smallint(5) unsigned DEFAULT NULL,
+  `start_points` smallint(5) DEFAULT NULL,
   `address_id` tinyint(3) unsigned NOT NULL DEFAULT '1',
   `is_bye` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `is_withdraw` enum('Y','N','1','2') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
@@ -531,6 +535,10 @@ CREATE TABLE `levelinfo` (
   `export_name` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL,
   `division_name_prefix` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
   `responsible_id` int(10) unsigned DEFAULT NULL,
+  `has_match_referee` tinyint(1) DEFAULT '1',
+  `has_room_responsible` tinyint(1) DEFAULT '0',
+  `first_season` tinyint(2) unsigned DEFAULT NULL,
+  `last_season` tinyint(2) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -566,6 +574,7 @@ CREATE TABLE `matchinfo` (
   `away_captain_player_id` int(10) unsigned DEFAULT NULL,
   `referee_player_id` int(10) unsigned DEFAULT NULL,
   `room_responsible_player_id` int(10) unsigned DEFAULT NULL,
+  `end_time` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -574,17 +583,16 @@ CREATE TABLE `matchinfo` (
 CREATE TABLE `matchplayer` (
   `match_id` int(10) unsigned NOT NULL DEFAULT '0',
   `player_nb` tinyint(2) unsigned NOT NULL DEFAULT '0',
+  `team_nb` tinyint(1) NOT NULL DEFAULT '1',
   `home_player_id` int(10) unsigned DEFAULT NULL,
   `away_player_id` int(10) unsigned DEFAULT NULL,
-  `home_double_player_id` int(10) unsigned DEFAULT NULL,
-  `away_double_player_id` int(10) unsigned DEFAULT NULL,
   `home_vict` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `away_vict` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `home_def` tinyint(2) unsigned DEFAULT NULL,
   `away_def` tinyint(2) unsigned DEFAULT NULL,
   `home_wo` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `away_wo` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`match_id`,`player_nb`),
+  PRIMARY KEY (`match_id`,`player_nb`,`team_nb`),
   KEY `home_player_id` (`home_player_id`),
   KEY `away_player_id` (`away_player_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -618,6 +626,7 @@ CREATE TABLE `matchtypegames` (
   `id` tinyint(2) unsigned NOT NULL AUTO_INCREMENT,
   `game_nb` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `nb_players` tinyint(2) unsigned NOT NULL DEFAULT '0',
+  `show_draw_only` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`id`,`game_nb`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -632,6 +641,7 @@ CREATE TABLE `matchtypeinfo` (
   `nb_points` tinyint(2) unsigned NOT NULL DEFAULT '11',
   `force_double_teams` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `nb_substitutes` tinyint(2) unsigned NOT NULL DEFAULT '0',
+  `nb_single_optional` tinyint(1) unsigned DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -676,7 +686,10 @@ CREATE TABLE `playerbel` (
   `bonus` int(10) DEFAULT '0',
   `count` int(10) unsigned NOT NULL DEFAULT '0',
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`first_season`,`player_id`,`class_category`,`date`)
+  `season_count` int(10) unsigned NOT NULL DEFAULT '0',
+  `position` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`first_season`,`player_id`,`class_category`,`date`),
+  KEY `playerbel_date` (`first_season`,`date`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='BEL points for all players';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -725,7 +738,7 @@ CREATE TABLE `playercategories` (
   `order` mediumint(3) NOT NULL DEFAULT '0',
   `show_index` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'Y',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Player categories';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Player categories';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -780,7 +793,7 @@ CREATE TABLE `playerinfo` (
   `office_phone` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL,
   `fax` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL,
   `gsm` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `comment` mediumtext COLLATE utf8_unicode_ci,
+  `comment` text COLLATE utf8_unicode_ci,
   `medic_validity` date DEFAULT NULL,
   `is_anonymous` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`id`),
@@ -817,7 +830,6 @@ CREATE TABLE `playerstatus` (
   `season` tinyint(4) NOT NULL DEFAULT '0',
   `player_id` int(10) unsigned NOT NULL DEFAULT '0',
   `status` char(1) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'I',
-  `woman_on_men_playerlist` enum('N') COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`season`,`player_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -828,6 +840,8 @@ CREATE TABLE `playerstatusinfo` (
   `name` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
   `order` tinyint(2) NOT NULL DEFAULT '1',
   `is_active` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  `is_playerlist` tinyint(1) DEFAULT '1',
+  `is_matchsheet` tinyint(1) DEFAULT '1',
   `is_default` tinyint(1) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`status`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -1006,7 +1020,9 @@ CREATE TABLE `tournamentresults` (
   `player_wo` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
   `opponent_wo` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
   PRIMARY KEY (`id`),
-  KEY `serie_id` (`serie_id`)
+  KEY `serie_id` (`serie_id`),
+  KEY `player_id` (`player_id`) USING BTREE,
+  KEY `opponent_id` (`opponent_id`) USING BTREE
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1046,6 +1062,7 @@ CREATE TABLE `tournaments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `season` smallint(2) unsigned NOT NULL DEFAULT '0',
   `name` varchar(85) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `short_name` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `date_from` date NOT NULL,
   `date_to` date DEFAULT NULL,
   `address_venue` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -1069,6 +1086,7 @@ CREATE TABLE `tournaments` (
   `validated_by` int(10) unsigned DEFAULT NULL,
   `open_registration` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'Y',
   `bel_category` int(4) unsigned NOT NULL DEFAULT '0',
+  `regularity_ranking` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Tournament list';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1097,6 +1115,7 @@ CREATE TABLE `tournamentseries` (
   `on_player_card` enum('y','n') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'y',
   `club_category` smallint(5) unsigned DEFAULT NULL,
   `bel_category` int(4) unsigned DEFAULT NULL,
+  `regularity_ranking_type` int(11) unsigned DEFAULT NULL,
   `sync_series` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `tournament_id` (`tournament_id`)

@@ -48,7 +48,6 @@ DROP TABLE IF EXISTS domaines;
 DROP TABLE IF EXISTS divisionteamplayers;
 DROP TABLE IF EXISTS divisionteaminfo;
 DROP TABLE IF EXISTS divisionsynchronisation;
-DROP TABLE IF EXISTS divisionroundinfo;
 DROP TABLE IF EXISTS divisionresultslog;
 DROP TABLE IF EXISTS divisionresults;
 DROP TABLE IF EXISTS divisioninfo;
