@@ -40,8 +40,12 @@ class DB_Sql {
   var $Link_ID  = 0;
   var $Query_ID = 0;
 
+  /* private : track the number of affected rows */
+  var $affected_rows_tracking = false;
+  var $affected_rows_count    = 0;
+
   /* public: constructor */
-  function __construct($query = "", $result_type = MYSQL_ASSOC) {
+  function DB_Sql($query = "", $result_type = MYSQL_ASSOC) {
       $this->query($query);
       $this->Result_Type = $result_type;
   }
@@ -69,33 +73,32 @@ class DB_Sql {
       
     /* establish connection, select database */
     if ( 0 == $this->Link_ID ) {
-
-      try {
-        $this->pdo = new PDO('mysql:host=' . $Host . ';dbname=' . $Database . ';charset=utf8mb4', $User, $Password);
-      } catch (Exception $e) {
-        $this->halt("Unable to connect the database, please contact the administrator.", $e);
-        unset($this->pdo);
-      }
-
-      if ($this->pdo) {
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-      } else {
+    
+      // DevNote: 128 --> http://stackoverflow.com/questions/12819098/error-1148-mysql-the-used-command-is-not-allowed-with-this-mysql-version
+      $this->Link_ID=@mysql_connect($Host, $User, $Password, FALSE, 128);
+      if (!$this->Link_ID) {
+        $this->halt("Unable to connect the database, please contact the administrator");
         return 0;
       }
     }
 
-    /* makes sure to select the correct mode */
-    $this->pdo->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));");
-    /* makes sure to use UTF */
-    $this->pdo->query("SET NAMES 'utf8';");
+    if (!@mysql_select_db($Database,$this->Link_ID)) {
+      $this->halt("cannot use database ".$this->Database);
+      return 0;
+    }
 
-    return $this->pdo;
+    /* makes sure to select the correct mode */
+    @mysql_query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));", $this->Link_ID);
+    /* makes sure to use UTF */
+    @mysql_query("SET NAMES 'utf8';", $this->Link_ID);
+
+    return $this->Link_ID;
   }
 
   /* public: discard the query result */
   function free() {
-    unset($this->result);
+      @mysql_free_result($this->Query_ID);
+      $this->Query_ID = 0;
   }
 
   /* public: perform a query */
@@ -123,18 +126,11 @@ class DB_Sql {
       printf("<pre>Debug: query = %s</pre>\n", $Query_String);
     }
 
-    $this->Errno = 0;
-    $this->Error = '';
-    try {
-      $this->result = $this->pdo->prepare($Query_String, array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL));
-      $this->result->execute();
-    } catch (PDOException $e) {
-      $this->result = false;
-      $this->Errno = $e->getCode();
-      $this->Error = $e->getMessage();
-    }
+    $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
     $this->Row   = 0;
-    if (!$this->result) {
+    $this->Errno = mysql_errno();
+    $this->Error = mysql_error();
+    if (!$this->Query_ID) {
       $this->halt("Invalid SQL: ".$Query_String);
     }
     elseif (($this->Debug || isset($_GET['debug_query'])) && isset($GLOBALS['perm']) && $GLOBALS['perm']->have_perm('admin'))
@@ -145,31 +141,25 @@ class DB_Sql {
       elseif ($etime > 0.3) $color = 'orange';
       printf("<span style=\"color: {$color}\">Debug took %f s with link ID = %d, query ID = %d<br></span>\n", $etime, $this->Link_ID, $this->Query_ID);
     }
+    if ($this->affected_rows_tracking) {
+      $this->affected_rows_count += $this->affected_rows();
+    }
 
     # Will return nada if it fails. That's fine.
-    return $this->result;
-  }
-
-  function execute($query) {
-    return $this->pdo->exec($query);
+    return $this->Query_ID;
   }
 
   /* public: walk result set */
   function next_record() {
-    if (!$this->result) {
+    if (!$this->Query_ID) {
       $this->halt("next_record called with no query pending.");
       return 0;
     }
 
-    $this->Errno = 0;
-    $this->Error = '';
-    try {
-      $this->Record = $this->result->fetch($this->Result_Type);
-      $this->Row   += 1;
-    } catch (PDOException $e) {
-      $this->Errno = $e->getCode();
-      $this->Error = $e->getMessage();
-    }
+    $this->Record = @mysql_fetch_array($this->Query_ID, $this->Result_Type);
+    $this->Row   += 1;
+    $this->Errno  = mysql_errno();
+    $this->Error  = mysql_error();
 
     $stat = is_array($this->Record);
     if (!$stat && $this->Auto_Free) {
@@ -180,36 +170,18 @@ class DB_Sql {
 
   /* public: position in result set */
   function seek($pos = 0) {
-    $this->Errno = 0;
-    $this->Error = '';
-    try {
-      // Re-execute current statement (to go back to first row)
-      $this->result->execute();
-      unset($this->Record);
-      $this->Row = 0;
-    } catch (PDOException $e) {
-      $this->Errno = $e->getCode();
-      $this->Error = $e->getMessage();
-    }
-    while ((!isset($this->Record) || $this->Record) && $this->Row < $pos) {
-      try {
-        $this->Record = $this->result->fetch($this->Result_Type);
-        $this->Row   += 1;
-      } catch (PDOException $e) {
-        $this->Errno = $e->getCode();
-        $this->Error = $e->getMessage();
-      }
-    }
-    if ($this->Error != '') {
+    $status = @mysql_data_seek($this->Query_ID, $pos);
+    if ($status)
+      $this->Row = $pos;
+    else {
       $this->halt("seek($pos) failed: result has ".$this->num_rows()." rows");
 
-      //DevNote: do we really need this?
-      //~ /* half assed attempt to save the day, 
-       //~ * but do not consider this documented or even
-       //~ * desireable behaviour.
-       //~ */
-      //~ @mysql_data_seek($this->Query_ID, $this->num_rows());
-      //~ $this->Row = $this->num_rows;
+      /* half assed attempt to save the day, 
+       * but do not consider this documented or even
+       * desireable behaviour.
+       */
+      @mysql_data_seek($this->Query_ID, $this->num_rows());
+      $this->Row = $this->num_rows;
       return 0;
     }
 
@@ -258,12 +230,23 @@ class DB_Sql {
     return @mysql_affected_rows($this->Link_ID);
   }
 
+  function enable_affected_rows_tracking() {
+    $this->affected_rows_tracking = true;
+    $this->affected_rows_count    = 0;
+  }
+  function disable_affected_rows_tracking() {
+    $this->affected_rows_tracking = false;
+  }
+  function get_affected_rows_count() {
+    return $this->affected_rows_count;
+  }
+
   function num_rows() {
-    return $this->result->rowCount();
+    return @mysql_num_rows($this->Query_ID);
   }
 
   function num_fields() {
-    return $this->result->columnCount();
+    return @mysql_num_fields($this->Query_ID);
   }
 
   /* public: shorthand notation */
@@ -400,23 +383,30 @@ class DB_Sql {
   }
 
   /* private: error handling */
-  function halt($msg, $e = null) {
-    if ($e !== null) {
-      $this->Error = $e->getMessage();
-      $this->Errno = $e->getCode();
-    }
+  function halt($msg) {
+    $this->Error = @mysql_error($this->Link_ID);
+    $this->Errno = @mysql_errno($this->Link_ID);
     if ($this->Halt_On_Error == "no")
       return;
 
     $this->haltmsg($msg);
 
-    if ($this->Halt_On_Error != "report")
+    if ($this->Halt_On_Error != "report") {
+      if ($this->Error === "Unknown database '{$this->Database}'") {
+        die("Database <b>{$this->Database}</b> could not be found, please make sure it is created.<br><pre>mysqladmin -u{$this->User} -p create {$this->Database}</pre>");
+      }
+      if ($this->Error === "Table '{$this->Database}.active_sessions' doesn't exist") {
+        die("Database <b>{$this->Database}</b> appears to be empty, please load the default schema.<br><pre>mysql -u{$this->User} -p {$this->Database} < sql/tabt-db.sql</pre>");
+      }
       die("Session halted.");
+    }
   }
 
   function haltmsg($msg) {
     printf("</td></tr></table><b>Database error:</b> %s<br>\n", $msg);
-    printf("<b>MySQL Error</b>: %s (%s)<br>\n", $this->Errno, $this->Error);
+    printf("<b>MySQL Error</b>: %s (%s)<br>\n",
+      $this->Errno,
+      $this->Error);
   }
 
   function table_names() {
@@ -487,7 +477,7 @@ class DB_Sql {
   }
 
   function table_exists($table) {
-    return $this->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '" . $this->Database . "' AND table_name = '" . $table . "';") > 0;
+    return $this->select_one("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '" . $this->Database . "' AND table_name = '" . $table . "';") > 0;
   }
 
   function is_table_locked($table) {
@@ -495,21 +485,11 @@ class DB_Sql {
     return $this->num_rows() > 0;
   }
 
-  function escape($value) {
-    return DB_Sql::db_escape($value);
-  }
-
-  static function db_escape($value) {
-    $return = '';
-    for($i = 0; $i < strlen($value); ++$i) {
-        $char = $value[$i];
-        $ord = ord($char);
-        if($char !== "'" && $char !== "\"" && $char !== '\\' && $ord >= 32 && $ord <= 126)
-            $return .= $char;
-        else
-            $return .= '\\x' . dechex($ord);
+  function escape($string) {
+    if (!$this->connect()) {
+      return $string;
     }
-    return $return;
+    return mysql_real_escape_string($string, $this->Link_ID);
   }
 
   function execute_queries($q_ary, $lock_table = null) {
