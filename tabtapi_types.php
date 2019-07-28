@@ -5,9 +5,9 @@
  * @brief Here are all types used by TabT API functions
  *
  * @author Gaëtan Frenoy <gaetan@frenoy.net>
- * @version 0.7.22
+ * @version 0.7.23
  *
- * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
  */
 
 /**
@@ -1276,6 +1276,21 @@ class TeamMatchEntry
   public $Venue;
 
   /**
+   * The club index of the venue where the match has to be played
+   *
+   * @b type:  string
+   */
+  public $VenueClub;
+
+  /**
+   * Details about the ::VenueEntry where the match has to be played
+   *
+   * @b type:  VenueEntry[]
+   * @see VenueEntry
+   */
+  public $VenueEntry;
+
+  /**
    * The club index of the visited team
    *
    * The unique identifier of the club of the visited team
@@ -1399,6 +1414,24 @@ class TeamMatchEntry
    * @b type:  string
    */
   public $IsAwayWithdrawn;
+
+  /**
+   * Indicates if the match has been validated.
+   *
+   * A match is typically locked when the match is validated by the division manager or when both teams have validated the match details.
+   * 
+   * @b type:  boolean
+   */
+  public $IsValidated;
+
+  /**
+   * Indicates if the match has been locked for modification.
+   *
+   * A match is typically locked when it has been validated (see IsValidated) or after a given amount of time without any further modifications.
+   * 
+   * @b type:  boolean
+   */
+  public $IsLocked;
 
   /**
    * Details about the team match (among others: when it has been played, who did played and the list of individual games)
@@ -2192,6 +2225,15 @@ class GetTournamentsResponse {
    * @b type:  string
    */
   public $Name;
+
+  /**
+   * The level the tournament was played in.
+   *
+   * A level is a logical group of divisions (eg per provinces or regions).
+   *
+   * @b type:  int
+   */
+  public $Level;
 
   /**
    * The unique reference of the tournament

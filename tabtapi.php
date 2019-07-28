@@ -6,9 +6,9 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.22
+ * @version 0.7.23
  *
- * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -346,6 +346,7 @@ function GetDivisionRanking(stdClass $Request) {
                    'GamesWon'              => $entry[$GLOBALS['str_GamesWon']],
                    'GamesLost'             => $entry[$GLOBALS['str_GamesLost']],
                    'GamesDraw'             => $entry[$GLOBALS['str_GamesDraw']],
+                   'GamesWO'               => $entry[$GLOBALS['str_GamesWO']],
                    'IndividualMatchesWon'  => $entry[$GLOBALS['str_MatchsWon']],
                    'IndividualMatchesLost' => $entry[$GLOBALS['str_MatchsLost']],
                    'IndividualSetsWon'     => $entry[$GLOBALS['str_SetsWon']],
@@ -377,7 +378,7 @@ function GetDivisionRanking(stdClass $Request) {
  * @param $Request GetMatchesRequest
  * @return GetMatchesResponse
  * @since Version 0.4
- * @version 0.7.22
+ * @version 0.7.23
  * @see GetMatchesRequest, GetMatchesResponse
  * @ingroup TabTAPIfunctions
  */
@@ -617,6 +618,9 @@ function GetMatches(stdClass $Request) {
     $orderby_clause = "di.category, li.order, IF(team_home.club_id={$ClubId}, team_home.indice, IF(team_away.club_id={$ClubId}, team_away.indice, '')), cali.week, cali.match_nb";
   }
 
+  // Remember lock time limit (from preferences)
+  $lock_limit_time = intval(get_pref('locktimelimit', 60*60*6));
+
   $q = <<<EOQ
 SELECT
   di.id as `DivisionId`,
@@ -657,7 +661,10 @@ SELECT
   divr.home_wo='Y' OR team_home.is_withdraw<>'N' as `HomeFF`,
   divr.away_wo='Y' OR team_away.is_withdraw<>'N' as `AwayFF`,
   team_home.is_withdraw as `HomeWithdrawn`,
-  team_away.is_withdraw as `AwayWithdrawn`
+  team_away.is_withdraw as `AwayWithdrawn`,
+  NOT divr.validated_by IS NULL as `IsValidated`,
+  divr.lock_timestamp as `LockTime`,
+  NOT divr.locked_by IS NULL as `IsLocked`
   {$details_select_clause}
 FROM
  (divisioninfo as di,
@@ -855,7 +862,6 @@ EOQ;
             $AwayPlayerUniqueIndex = $db2->Record['away_index'];
             break;
           case 2:
-            print_r($db2->Record['home_position']);
             $HomePlayerMatchIndex  = $DoubleTeams[$db2->Record['home_index']];
             $AwayPlayerMatchIndex  = $DoubleTeams[$db2->Record['away_index']];
             $HomePlayerUniqueIndex = array($HomePlayers[$HomePlayerMatchIndex[0]]['UniqueIndex'], $HomePlayers[$HomePlayerMatchIndex[1]]['UniqueIndex']);
@@ -948,7 +954,9 @@ EOQ;
         'IsHomeForfeited' => $db->Record['HomeFF'],
         'IsAwayForfeited' => $db->Record['AwayFF'],
         'IsHomeWithdrawn' => $db->Record['HomeWithdrawn'],
-        'IsAwayWithdrawn' => $db->Record['AwayWithdrawn']
+        'IsAwayWithdrawn' => $db->Record['AwayWithdrawn'],
+        'IsValidated'     => $db->Record['IsValidated'],
+        'IsLocked'        => $db->Record['IsValidated'] || ($db->Record['IsLocked'] && ($lock_limit_time < 0 ? true : strtotime($db->Record['LockTime']) + $lock_limit_time < time()))
       ),
       $WithDetails ?
         array('MatchDetails' => $resDetails) :
@@ -1192,6 +1200,9 @@ function GetMembers(stdClass $Request) {
     $results_select = ",GROUP_CONCAT(DISTINCT CONCAT(raw.match_date, '§', opp_pi.vttl_index, '§', opp_pi.first_name, '§', opp_pi.last_name, '§', IF(ci_raw.name='NC', '{$GLOBALS['str_NC']}', ci_raw.name), '§', raw.res, '§', IFNULL(IF(raw.match_type='T' AND raw.home='N',raw.set_against,raw.set_for), ''), '§', IFNULL(IF(raw.match_type='T' AND raw.home='N',raw.set_for,raw.set_against), ''), '§', raw.match_id, '§', raw.game_id, '§', raw.match_type, '§', IFNULL(IF(TRIM(opp_club.short_name)='', NULL, opp_club.short_name), opp_club.name), '§', IFNULL(t.name, ''), '§', IFNULL(ts.name, ''), '§', IFNULL(mnum.matchnum, ''), '§', {$opp_ranking_results_select}) ORDER BY raw.match_date SEPARATOR 'µ') as results";
   }
 
+  // Status field
+  $status_field = 'IFNULL(pcs.status, pstat.status)';
+
   // Retrieve all members of requested club for requested season
   $q = <<<EOQ
 SELECT
@@ -1202,7 +1213,7 @@ SELECT
   pi.last_name as last_name,
   pi.sex as sex,
   pi.birthdate as birthdate,
-  IFNULL(pstat.status, 'A') as status,
+  IFNULL({$status_field}, 'A') as status,
   IF(ci.name='NC', '{$GLOBALS['str_NC']}', ci.name) as classement,
   c.indice as club_indice,
   pi.medic_validity>si.start_date as medical_attestation,
@@ -1224,8 +1235,9 @@ FROM
   (seasoninfo as si, playerinfo as pi)
   {$new_ranking_from}
   {$results_join_clause}
-  LEFT JOIN playerstatus as pstat ON pstat.season=si.id AND pstat.player_id=pi.id
   LEFT JOIN playercategories as pcat ON {$pcat_wherecond}
+  LEFT JOIN playerstatus as pstat ON pstat.season=si.id AND pstat.player_id=pi.id
+  LEFT JOIN playercategorystatus as pcs ON pcs.season=si.id AND pcs.player_id=pi.id AND pcs.category_id=pcat.id
   LEFT JOIN playercategories as pcat_strict ON {$pcat_strict_wherecond}
   LEFT JOIN playerlastelo pelo ON pelo.player_id=pi.id AND pelo.class_category=pcat.classementcategory
   LEFT JOIN postcodes z ON z.id=pi.postcode,
@@ -1237,12 +1249,11 @@ WHERE 1
   AND pclub.season=si.id
   AND pclub.player_id=pi.id
   AND {$club_where_clause}
-  AND (ISNULL(pstat.status) OR IFNULL(pstat.status, 'A') IN ('A','S','E','L','R','V','D','T','M'))
-  AND ({$PlayerCategory}<>1 OR pi.sex='M' OR ISNULL(pstat.status) OR ISNULL(pstat.woman_on_men_playerlist))
+  AND IFNULL({$status_field}, 'A') IN ('A','S','E','L','R','V','D','T','M')
   AND pclass.season=si.id
   AND pclass.player_id=pi.id
   AND pclass.category=pcat.classementcategory
-  AND (pcat.id={$PlayerCategory} OR IFNULL(pstat.status, 'A')='E')
+  AND (pcat.id={$PlayerCategory} OR IFNULL({$status_field}, 'A')='E')
   AND ci.id=pclass.classement_id
   AND ci.category=pclass.category
   AND {$index_where_clause}
@@ -1702,7 +1713,7 @@ EOQ;
  * @param $Request GetTournamentsRequest
  * @return GetTournamentsResponse
  * @since Version 0.7.16
- * @version 0.7.22
+ * @version 0.7.23
  */
 function GetTournaments(stdClass $Request) {
   // Check permissions & quota
@@ -1773,6 +1784,7 @@ EOC;
 SELECT
   t.id as unique_index,
   t.name as tournament_name,
+  t.level as tournament_level,
   t.authorisation_ref as external_index,
   t.date_from as tournament_date_from,
   t.date_to as tournament_date_to,
@@ -1802,6 +1814,7 @@ EOQ;
     $tournamentEntry = array(
       'UniqueIndex'   => $db->Record['unique_index'],
       'Name'          => $db->Record['tournament_name'],
+      'Level'         => $db->Record['tournament_level'],
       'ExternalIndex' => $db->Record['external_index'],
       'DateFrom'      => $db->Record['tournament_date_from']
     );

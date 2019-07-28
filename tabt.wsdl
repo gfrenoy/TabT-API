@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- TabT API (http://api.frenoy.net/TabT) v#VERSION# (#DATE#) for database "#DATABASE#"
-     Copyright 2007-2018, Gaëtan Frenoy <gaetan@frenoy.net> -->
+     Copyright 2007-2019, Gaëtan Frenoy <gaetan@frenoy.net> -->
 <wsdl:definitions
   targetNamespace="http://api.frenoy.net/TabTAPI"
   xmlns:tns="http://api.frenoy.net/TabTAPI"
@@ -291,6 +291,7 @@
           <xsd:element name="GamesWon" type="xsd:integer"/>
           <xsd:element name="GamesLost" type="xsd:integer"/>
           <xsd:element name="GamesDraw" type="xsd:integer"/>
+          <xsd:element name="GamesWO" type="xsd:integer"/>
           <xsd:element name="IndividualMatchesWon" type="xsd:integer"/>
           <xsd:element name="IndividualMatchesLost" type="xsd:integer"/>
           <xsd:element name="IndividualSetsWon" type="xsd:integer"/>
@@ -377,6 +378,8 @@
           <xsd:element name="DivisionCategory" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="IsHomeWithdrawn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="IsAwayWithdrawn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="IsValidated" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
+          <xsd:element name="IsLocked" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
         </xsd:all>
       </xsd:complexType>
       <xsd:complexType name="TeamMatchPlayerListType">
@@ -488,6 +491,7 @@
         <xsd:sequence>
           <xsd:element name="UniqueIndex" type="xsd:integer"/>
           <xsd:element name="Name" type="xsd:string"/>
+          <xsd:element name="Level" type="xsd:integer" />
           <xsd:element name="ExternalIndex" type="xsd:string"/>
           <xsd:element name="DateFrom" type="xsd:date"/>
           <xsd:element name="DateTo" type="xsd:date" minOccurs="0" />
