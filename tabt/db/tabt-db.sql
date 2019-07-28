@@ -49,6 +49,8 @@ CREATE TABLE `auth_user` (
   `conf_id` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
   `conf_sent_on` timestamp NULL DEFAULT NULL,
   `conf_sent_to` varchar(60) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `restrict_to_ip` int(11) unsigned DEFAULT NULL,
+  `api_only` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `k_username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='List of authorized users';
