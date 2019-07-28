@@ -1717,6 +1717,11 @@ EOQ;
  * @version 0.7.23
  */
 function GetTournaments(stdClass $Request) {
+
+  $logger = Logger::getLogger('GetTournaments');
+  $logger->debug('request is:'.json_encode($Request) );
+  
+
   // Check permissions & quota
   $permissions = _MethodAPI(10, isset($Request->Credentials) ? $Request->Credentials : (object)array());
 
@@ -1725,6 +1730,10 @@ function GetTournaments(stdClass $Request) {
   if (isset($Request->TournamentUniqueIndex))  $TournamentId    = trim($Request->TournamentUniqueIndex);
   $WithResults = isset($Request->WithResults) && $Request->WithResults ? true : false;
   $WithRegistrations = isset($Request->WithRegistrations) && $Request->WithRegistrations ? true : false;
+
+  $logger->debug('WithResults='.$WithResults);  
+  $logger->debug('WithRegistrations='.$WithRegistrations);  
+ 
 
   // Create database session
   $db = new DB_Session();
@@ -1889,69 +1898,78 @@ EOQ;
 
         // Adding registration infos for each serie
         if( $WithRegistrations ) {
+          $SerieEntry['RegistrationCount']=0;
+
+          $logger->debug('Loading registrations for tournament:'.$TournamentId);  
 
           // evaluate registration count for that serie and that tournament
-          $sqlRegistrationCountForSerie="select count(*) as cnt from tournamentseries where serie_id={$serie_id}";
-          $db_2->query($sqlRegistrationCountForSerie);
-          //$db_2->next_record();
-          $count = $db_2->select_one($sqlRegistrationCountForSerie); 
-          //$count=$db_2->Record['cnt'];
+          $sqlRegistrationCountForSerie="select count(*) as cnt from tournamentplayers where serie_id={$serie_id}";
+
+          $count=$db_2->select_one($sqlRegistrationCountForSerie); 
+          $logger->debug('Loading registrations for tournament count:'.$count);  
+
           $SerieEntry['RegistrationCount']=$count;
+
           // identify each registration for that serie and that tournament (if any)
           if( $count > 0 ) {
 
             $registrations=array();
 
-            $sqlFindRegitrationsForSerie=<<<EOQ
-select 
-  tp.id as UniqueIdentifier,
-	pi.id as PlayerUniqueIndex, pi.first_name as FirstName, pi.last_name as LastName,
-	ci.name as Ranking,
-	cb.id as clubUniqueIndex, cb.name as ClubName, cb.short_name as ClubShortName, cb.indice as ClubIndice, cb.category as ClubCategory,
-	cc.name as ClubCategoryName
+            $sqlFindRegitrationsForSerie="
+select tp.id as UniqueIndex,
+  pi.id as PlayerUniqueIndex, pi.first_name as FirstName, pi.last_name as LastName,
+  ci.name as Ranking,
+  cb.id as clubUniqueIndex, cb.name as ClubName, cb.short_name as ClubShortName, cb.indice as ClubIndice, 
+  cc.id as ClubCategory, cc.name as ClubCategoryName
 from tournamentplayers tp
-	inner join tournaments tnt on tnt.id=tp.tournament_id
-	inner join playerinfo pi on pi.id=tp.player_id
-	inner join tournamentseries ts on ts.id=tp.serie_id
-	inner join playerclassement pc 
-	  on pc.player_id=tp.player_id 
-	  and pc.category=ts.classementcategory
-	  and pc.season = tnt.season
-	inner join classementinfo ci on ci.id=pc.classement_id
-	inner join playerclub pcb on pcb.player_id = tp.player_id and pcb.season=tnt.season
-	inner join clubs cb on cb.id=pcb.club_id
-	inner join clubcategories cc on cc.id=cb.category
+  inner join playerinfo pi on pi.id=tp.player_id
+  inner join tournaments t on t.id=tp.tournament_id
+  inner join tournamentseries s on s.id=tp.serie_id
+  inner join playerclassement pc on pc.season=t.season and pc.player_id=tp.player_id 
+    and pc.category=s.classementcategory
+  inner join classementinfo ci on ci.id=pc.classement_id and ci.category=s.classementcategory
+  inner join playerclub pcb on pcb.player_id=tp.player_id and pcb.season=t.season
+  inner join clubs cb on cb.id=pcb.club_id
+  inner join clubcategories cc on cc.id=cb.category
 where tp.tournament_id={$TournamentId}
-order by pi.last_name, pi.first_name
-EOQ;
-            $db_2->query($sqlRegistrationCountForSerie);
-            while ($db->next_record()) {
+and tp.serie_id={$serie_id}
+";
+            $q_id=$db_2->query($sqlFindRegitrationsForSerie);
+
+            while ($db_2->next_record()) {
+
               $d=array(
-                'RegistrationUniqueIndex'=> $db->Record['UniqueIdentifier'],
+                'RegistrationUniqueIndex'=> $db_2->Record['UniqueIndex'],
+                
                 'Member' => array( 
-                    'UniqueIndex'=> $db->Record['PlayerUniqueIndex'],
-                    'FirstName'=> $db->Record['FirstName'],
-                    'LastName'=> $db->Record['LastName'],
-                    'Ranking'=> $db->Record['Ranking'],
+                    'UniqueIndex'=> $db_2->Record['PlayerUniqueIndex'],
+                    'FirstName'=> $db_2->Record['FirstName'],
+                    'LastName'=> $db_2->Record['LastName'],
+                    'Ranking'=> $db_2->Record['Ranking'],
                   ),
                 'Club' => array(
-                    'UniqueIndex'=> $db->Record['clubUniqueIndex'],
-                    'LongName'=> $db->Record['ClubName'],
-                    'Name'=> $db->Record['ClubShortName'],
-                    'Category'=> $db->Record['clubCategory'],
-                    'CategoryName'=> $db->Record['ClubCategoryName'],
+                    'UniqueIndex'=> $db_2->Record['clubUniqueIndex'],
+                    'LongName'=> $db_2->Record['ClubName'],
+                    'Name'=> $db_2->Record['ClubShortName'],
+                    'Category'=> $db_2->Record['ClubCategory'],
+                    'CategoryName'=> $db_2->Record['ClubCategoryName'],
                     'VenueCount'=> -1, // noop here ... Prefer to put '-1' in place of '0', as '0' means 'nothing'
                 )
+                
               );
 
+              $logger->debug('Loading registrations for tournament: registered='.json_encode($d));  
               $registrations[]=$d;
+              
             }
 
             $SerieEntry['RegistrationEntries'] = $registrations;
+            
           }
         }
 
         $tournamentEntry['SerieEntries'][] = $SerieEntry;
+        
       }
 
       if( $WithRegistrations && $db_2!=null)
@@ -1969,6 +1987,10 @@ EOQ;
   // Release database connection
   $db->free();
   unset($db);
+
+  if( $WithRegistrations ) {
+    $logger->debug('Tournament entry: '.json_encode($tournamentEntry));  
+  }
 
   return array('TournamentCount'   => count($res),
                'TournamentEntries' => $res);
