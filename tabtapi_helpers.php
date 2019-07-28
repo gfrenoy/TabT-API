@@ -28,8 +28,8 @@ function _GetPermissions($Credentials) {
   // Establish a dummy connection to make sure "mysql_real_escape_string" works as expected
   $db = new DB_Session();
   $db->query('SELECT COUNT(*) FROM auth_user');
-  $Account    = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account) : '';
-  $Password   = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password) : '';
+  $Account    = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account, $db->Link_ID) : '';
+  $Password   = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password, $db->Link_ID) : '';
   $OnBehalfOf = isset($Credentials->OnBehalfOf) && is_numeric($Credentials->OnBehalfOf)? intval($Credentials->OnBehalfOf) : 0;
 
   if ($Account != '') {

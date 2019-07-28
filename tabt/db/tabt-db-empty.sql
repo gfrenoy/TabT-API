@@ -48,7 +48,6 @@ DELETE FROM domaines;
 DELETE FROM divisionteamplayers;
 DELETE FROM divisionteaminfo;
 DELETE FROM divisionsynchronisation;
-DELETE FROM divisionroundinfo;
 DELETE FROM divisionresultslog;
 DELETE FROM divisionresults;
 DELETE FROM divisioninfo;
