@@ -459,6 +459,28 @@ class DB_Sql {
     return $res;
   }
 
+  function select_list($q, $fields = null) {
+    $res = array();
+    $this->query($q);
+    while ($this->Errno == 0 && $this->next_record()) {
+      if (is_array($fields)) {
+        $f = array();
+        foreach ($this->Record as $k => $v) {
+          if (in_array($k, $fields, true)) $f[$k] = $v;
+        }
+        $res[] = $f;
+      }
+      elseif (!is_null($fields)) {
+        if (isset($this->Record[$fields])) $res[] = $this->Record[$fields];
+      } else {
+        $res[] = $this->Record;
+      }
+    }
+    $this->free();
+
+    return $res;
+  }
+
   function select_count($from, $where = '') {
     $this->query("SELECT COUNT(*) FROM {$from} WHERE 1" . ($where!=''?" AND {$where};":''));
     return $this->next_record() ? current($this->Record) : -1;

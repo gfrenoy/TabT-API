@@ -86,7 +86,7 @@ EOQ;
     // If some permissions are allowed, update "Auth" object accordingly
     if (is_string($permissions)) {
       if ($region && is_numeric($region)) {
-        $levels   = select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
+        $levels   = $db->select_list("SELECT main_level FROM clubcategories cc WHERE (SELECT CONCAT(',', `group`, ',') FROM clubcategories WHERE id={$region}) LIKE CONCAT('%,', cc.id, ',%')", 'main_level');
         $levels[] = $region_level;
       } else {
         $levels = array();

@@ -38,6 +38,12 @@ if (!isset($GLOBALS['site_info']['database'])) {
   @include_once($GLOBALS['site_info']['path'].'config.inc');
 }
 
+// TabT includes
+if (!@include_once($GLOBALS['site_info']['path'].'public/prepend.php')) {
+  print('TabT not correctly installed on server.');
+  exit;
+}
+
 // Some constants 
 define('WSDL_FILENAME', 'tabt.wsdl');
 define('TABTAPI_VERSION', '0.7.23');
