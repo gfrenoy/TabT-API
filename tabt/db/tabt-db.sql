@@ -36,18 +36,8 @@ CREATE TABLE `apiuse` (
   `time` int(11) unsigned NOT NULL,
   `called` double NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Some statistics on API usage';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Some statistics on API usage';
 /*!40101 SET character_set_client = @saved_cs_client */;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE VIEW `apiusesummary` AS SELECT 
- 1 AS `id`,
- 1 AS `player_id`,
- 1 AS `consumed`,
- 1 AS `quota`,
- 1 AS `lastused`,
- 1 AS `allowed_quota`*/;
-SET character_set_client = @saved_cs_client;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `auth_user` (
@@ -101,7 +91,7 @@ CREATE TABLE `calendardateinfo` (
   `calendar_id` int(5) unsigned NOT NULL DEFAULT '0',
   `name` varchar(80) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Information about calendar date tables';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Information about calendar date tables';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -111,7 +101,7 @@ CREATE TABLE `calendardates` (
   `date` date NOT NULL,
   PRIMARY KEY (`calendardate_id`,`week`),
   KEY `calendardate_id` (`calendardate_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -127,12 +117,12 @@ CREATE TABLE `calendarinfo` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `calendartypeinfo` (
-  `id`int(5) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int(5) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(60) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `nb_team` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `competition_id` tinyint(1) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci PACK_KEYS=0 COMMENT='A calendar template for a given type of competition';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci PACK_KEYS=0 COMMENT='A calendar template for a given type of competition';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -208,7 +198,7 @@ CREATE TABLE `clubaddressinfo` (
   `comment` mediumtext COLLATE utf8_unicode_ci,
   PRIMARY KEY (`id`),
   UNIQUE KEY `club_id` (`club_id`,`address_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=102 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -220,7 +210,7 @@ CREATE TABLE `clubcategories` (
   `group` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `main_level` tinyint(2) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -253,7 +243,7 @@ CREATE TABLE `clubresponsabilityinfo` (
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `modified_by` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`lang`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -266,7 +256,7 @@ CREATE TABLE `clubresponsibles` (
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `modified_by` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -288,23 +278,6 @@ CREATE TABLE `clubs` (
   `last_season` tinyint(2) unsigned DEFAULT NULL,
   `is_category_default` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=108 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `clubstyles` (
-  `club_id` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `attrib_name` varchar(12) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  `attrib_value` varchar(150) COLLATE utf8_unicode_ci DEFAULT '#FFFFFF',
-  PRIMARY KEY (`club_id`,`attrib_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `clubstylesinfo` (
-  `attrib_name` varchar(10) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0',
-  `attrib_desc` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  PRIMARY KEY (`attrib_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -322,7 +295,7 @@ CREATE TABLE `controlgroupinfo` (
   `name` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `classementcategory` tinyint(2) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -373,7 +346,7 @@ CREATE TABLE `divisioncategories` (
   `last_season` tinyint(2) DEFAULT NULL,
   `order` int(2) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -411,7 +384,7 @@ CREATE TABLE `divisioninfo` (
   `validated_by` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`,`season`),
   KEY `id` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci PACK_KEYS=0;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci PACK_KEYS=0;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -428,7 +401,7 @@ CREATE TABLE `divisionresults` (
   `home_wo` enum('N','Y') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `away_wo` enum('N','Y') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   `score_modified` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
-  `validation_timestamp` timestamp NOT NULL,
+  `validation_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `validated_by` int(5) unsigned DEFAULT NULL,
   `lock_type` enum('B','H','A','N') COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'B=Both, H=Home, A=Away, N (or NULL)=None',
   `lock_timestamp` timestamp NULL DEFAULT NULL,
@@ -557,7 +530,7 @@ CREATE TABLE `levelinfo` (
   `division_name_prefix` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
   `responsible_id` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -570,7 +543,7 @@ CREATE TABLE `matchcomments` (
   `message` mediumtext COLLATE utf8_unicode_ci NOT NULL,
   `private` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -592,7 +565,7 @@ CREATE TABLE `matchinfo` (
   `referee_player_id` int(10) unsigned DEFAULT NULL,
   `room_responsible_player_id` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=274 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -605,8 +578,8 @@ CREATE TABLE `matchplayer` (
   `away_double_player_id` int(10) unsigned DEFAULT NULL,
   `home_vict` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `away_vict` tinyint(2) unsigned NOT NULL DEFAULT '0',
-  `home_def` tinyint(2) unsigned NULL DEFAULT NULL,
-  `away_def` tinyint(2) unsigned NULL DEFAULT NULL,
+  `home_def` tinyint(2) unsigned DEFAULT NULL,
+  `away_def` tinyint(2) unsigned DEFAULT NULL,
   `home_wo` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `away_wo` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`match_id`,`player_nb`),
@@ -644,7 +617,7 @@ CREATE TABLE `matchtypegames` (
   `game_nb` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `nb_players` tinyint(2) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`game_nb`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -680,25 +653,6 @@ CREATE TABLE `nationalities` (
   `name` varchar(60) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Nationality list';
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `news` (
-  `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `date` date NOT NULL,
-  `creator` int(10) unsigned NOT NULL DEFAULT '1',
-  `categories` varchar(50) COLLATE utf8_unicode_ci DEFAULT 'NULL',
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `news_text` (
-  `news_id` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `lang` char(2) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  `message` mediumtext COLLATE utf8_unicode_ci,
-  PRIMARY KEY (`news_id`,`lang`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -769,7 +723,7 @@ CREATE TABLE `playercategories` (
   `order` mediumint(3) NOT NULL DEFAULT '0',
   `show_index` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'Y',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Player categories';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Player categories';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -829,7 +783,7 @@ CREATE TABLE `playerinfo` (
   `is_anonymous` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
   PRIMARY KEY (`id`),
   UNIQUE KEY `vttl_index` (`vttl_index`)
-) ENGINE=InnoDB AUTO_INCREMENT=1370 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -911,7 +865,7 @@ CREATE TABLE `postcodes` (
   `postcode` int(10) unsigned NOT NULL DEFAULT '0',
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2921 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Postcode list';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Postcode list';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -922,7 +876,7 @@ CREATE TABLE `preferences` (
   `perms` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `type` enum('string','yesno') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'string',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=46 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -946,15 +900,6 @@ CREATE TABLE `seasoninfo` (
   `competition_start_date` date DEFAULT NULL,
   `elo_correction` smallint(5) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `smscredits` (
-  `player_id` int(5) unsigned NOT NULL,
-  `credit` int(5) NOT NULL DEFAULT '0',
-  `changed` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`player_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1035,6 +980,14 @@ CREATE TABLE `tournamentplayers` (
   PRIMARY KEY (`id`),
   KEY `serie_id` (`serie_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tournamentregularityrankinginfo` (
+  `id` int(11) unsigned NOT NULL,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of configuration types for regularity rankings';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -1147,80 +1100,3 @@ CREATE TABLE `tournamentseries` (
   KEY `tournament_id` (`tournament_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user_link` (
-  `uid` varchar(32) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  `link_id` smallint(3) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `link` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  PRIMARY KEY (`uid`,`link_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `userdivisionlistitems` (
-  `list_id` int(10) unsigned NOT NULL,
-  `div_id` int(5) unsigned NOT NULL,
-  `order` int(5) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`list_id`,`div_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `userdivisionlists` (
-  `list_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `season` tinyint(2) NOT NULL,
-  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `player_id` int(10) unsigned DEFAULT NULL,
-  `is_public` enum('Y','N') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'N',
-  `max_items` mediumint(2) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`list_id`),
-  KEY `FK_userdivisionlists_player` (`player_id`),
-  KEY `FK_userdivisionlists_season` (`season`),
-  CONSTRAINT `FK_userdivisionlists_player` FOREIGN KEY (`player_id`) REFERENCES `playerinfo` (`id`),
-  CONSTRAINT `FK_userdivisionlists_season` FOREIGN KEY (`season`) REFERENCES `seasoninfo` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!50001 DROP VIEW IF EXISTS `apiusesummary`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `apiusesummary` AS select if(isnull(`pi`.`id`),inet_ntoa(`acq`.`id`),concat(`pi`.`first_name`,' ',`pi`.`last_name`)) AS `id`,ifnull(`pi`.`id`,0) AS `player_id`,`acq`.`consumed` AS `consumed`,`acq`.`quota` AS `quota`,from_unixtime(`acq`.`lastused`) AS `lastused`,`aq`.`quota` AS `allowed_quota` from ((`apicurrentquota` `acq` left join `playerinfo` `pi` on((`pi`.`id` = `acq`.`id`))) left join `apiquota` `aq` on((`aq`.`player_id` = `pi`.`id`))) order by `acq`.`consumed` desc */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE FUNCTION `capfirst`(`INPUT` VARCHAR(255)) RETURNS varchar(255) DETERMINISTIC
-BEGIN
-    DECLARE len INT;DECLARE i INT;
-    SET len = CHAR_LENGTH(INPUT);
-    SET INPUT = LOWER(INPUT);
-    SET i = 0;
-    WHILE (i < len) DO
-        IF (MID(INPUT,i,1) = ' ' OR i = 0) THEN
-            IF (i < len) THEN
-                SET INPUT = CONCAT(LEFT(INPUT,i), UPPER(MID(INPUT,i + 1,1)), RIGHT(INPUT,len - i - 1));
-            END IF;
-        END IF;
-        SET i = i + 1;
-    END WHILE;
-    RETURN INPUT;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
