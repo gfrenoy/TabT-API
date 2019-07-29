@@ -1719,7 +1719,9 @@ EOQ;
 function GetTournaments(stdClass $Request) {
 
   $logger = Logger::getLogger('GetTournaments');
-  $logger->debug('request is:'.json_encode($Request) );
+  if($logger->isDebugEnabled()) {
+    $logger->debug('request is:'.json_encode($Request) );
+  }
   
 
   // Check permissions & quota
@@ -1731,8 +1733,10 @@ function GetTournaments(stdClass $Request) {
   $WithResults = isset($Request->WithResults) && $Request->WithResults ? true : false;
   $WithRegistrations = isset($Request->WithRegistrations) && $Request->WithRegistrations ? true : false;
 
-  $logger->debug('WithResults='.$WithResults);  
-  $logger->debug('WithRegistrations='.$WithRegistrations);  
+  if($logger->isDebugEnabled()) {
+    $logger->debug('WithResults='.$WithResults);  
+    $logger->debug('WithRegistrations='.$WithRegistrations);  
+  }
  
 
   // Create database session
@@ -1900,13 +1904,17 @@ EOQ;
         if( $WithRegistrations ) {
           $SerieEntry['RegistrationCount']=0;
 
-          $logger->debug('Loading registrations for tournament:'.$TournamentId);  
+          if($logger->isDebugEnabled()) {
+            $logger->debug('Loading registrations for tournament:'.$TournamentId);  
+          }
 
           // evaluate registration count for that serie and that tournament
           $sqlRegistrationCountForSerie="select count(*) as cnt from tournamentplayers where serie_id={$serie_id}";
 
           $count=$db_2->select_one($sqlRegistrationCountForSerie); 
-          $logger->debug('Loading registrations for tournament count:'.$count);  
+          if($logger->isDebugEnabled()) {
+            $logger->debug('Loading registrations for tournament count:'.$count);  
+          }
 
           $SerieEntry['RegistrationCount']=$count;
 
@@ -1961,7 +1969,9 @@ and tp.serie_id={$serie_id}
                 
               );
 
-              $logger->debug('Loading registrations for tournament: registered='.json_encode($d));  
+              if($logger->isDebugEnabled()) {
+                $logger->debug('Loading registrations for tournament: registered='.json_encode($d));  
+              }
               $registrations[]=$d;
               
             }

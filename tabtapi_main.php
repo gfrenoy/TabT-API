@@ -26,7 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-ini_set("soap.wsdl_cache_enabled","0");
+
 
 require_once dirname(__FILE__).'./log4php/Logger.php';
 Logger::configure(dirname(__FILE__).'./log4php/resources/appender_console.properties');
@@ -35,6 +35,11 @@ Logger::configure(dirname(__FILE__).'./log4php/resources/appender_console.proper
 if (!@include_once('config.inc')) {
   print('TabT not correctly installed on server.  Configuration file is missing.');
   exit;
+}
+
+$env = isset($GLOBALS['site_info']['environment']) ? $GLOBALS['site_info']['environment'] : 'pr';
+if( $env !== 'pr') {
+  ini_set("soap.wsdl_cache_enabled","0");
 }
 
 // Check we have the required information to start
