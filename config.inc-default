@@ -13,6 +13,8 @@ $GLOBALS['site_info'] = array(
    // Current season
    'season'      => 17,
    // If set to true, user can see query their own ranking information
-   'allow_own_ranking_info' => false
+   'allow_own_ranking_info' => false,
+   // environment
+   'environment' => 'pr', // possible values: pr, dv
 );
 ?>
