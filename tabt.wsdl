@@ -411,6 +411,8 @@
 					<xsd:element name="ResultCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
 					<xsd:element name="ResultEntries" minOccurs="0" maxOccurs="unbounded" type="tns:PlayerResultEntryType"/>
 					<xsd:element name="NationalNumber" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+					<xsd:element name="Licence" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+					<xsd:element name="LicenceVTTL" minOccurs="0" maxOccurs="1" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:complexType>
 			<xsd:simpleType name="SupportedLanguages">
@@ -434,8 +436,10 @@
 					<xsd:element name="LongName" type="xsd:string"/>
 					<xsd:element name="Category" type="xsd:integer"/>
 					<xsd:element name="CategoryName" type="xsd:string"/>
+					<xsd:element name="Indice" minOccurs="0" maxOccurs="1" type="xsd:string"/>
 					<xsd:element name="VenueCount" type="xsd:integer"/>
 					<xsd:element name="VenueEntries" minOccurs="0" maxOccurs="unbounded" type="tns:VenueEntryType"/>
+
 				</xsd:sequence>
 			</xsd:complexType>
 			<xsd:complexType name="VenueEntryType">

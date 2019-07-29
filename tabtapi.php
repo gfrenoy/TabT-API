@@ -1917,7 +1917,7 @@ EOQ;
 
             $sqlFindRegitrationsForSerie="
 select tp.id as UniqueIndex,
-  pi.id as PlayerUniqueIndex, pi.first_name as FirstName, pi.last_name as LastName,
+  pi.id as PlayerUniqueIndex, pi.first_name as FirstName, pi.last_name as LastName, pi.index as Licence, pi.vttl_index as LicenceVTTL,
   ci.name as Ranking,
   cb.id as clubUniqueIndex, cb.name as ClubName, cb.short_name as ClubShortName, cb.indice as ClubIndice, 
   cc.id as ClubCategory, cc.name as ClubCategoryName
@@ -1946,11 +1946,14 @@ and tp.serie_id={$serie_id}
                     'FirstName'=> $db_2->Record['FirstName'],
                     'LastName'=> $db_2->Record['LastName'],
                     'Ranking'=> $db_2->Record['Ranking'],
+                    'Licence'=> $db_2->Record['Licence'],
+                    'LicenceVTTL'=> $db_2->Record['LicenceVTTL'],
                   ),
                 'Club' => array(
                     'UniqueIndex'=> $db_2->Record['clubUniqueIndex'],
                     'LongName'=> $db_2->Record['ClubName'],
                     'Name'=> $db_2->Record['ClubShortName'],
+                    'Indice'=> $db_2->Record['ClubIndice'],
                     'Category'=> $db_2->Record['ClubCategory'],
                     'CategoryName'=> $db_2->Record['ClubCategoryName'],
                     'VenueCount'=> -1, // noop here ... Prefer to put '-1' in place of '0', as '0' means 'nothing'
