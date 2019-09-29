@@ -6,9 +6,9 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.22
+ * @version 0.7.23
  *
- * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -290,6 +290,8 @@ function _EndAPI() {
   $db->select_one("LOCK TABLES apicurrentquota WRITE");
   if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}") == 0) {
     // Very first call
+    // DevNote: to avoid issue in redundant mode, make sure we overwrite any existing entry before adding a new one
+    $db->select_one("DELETE FROM apicurrentquota WHERE id={$GLOBALS['api_caller']};");
     $db->select_one("INSERT INTO apicurrentquota (id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
   } else {
     // Returning user
