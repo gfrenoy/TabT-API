@@ -369,7 +369,7 @@
           <xsd:element name="AwayTeam" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Score" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="MatchUniqueId" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
-          <xsd:element name="NextWeekName" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+          <xsd:element name="NextWeekName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="PreviousWeekName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="IsHomeForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
           <xsd:element name="IsAwayForfeited" minOccurs="0" maxOccurs="1" type="xsd:boolean"/>
