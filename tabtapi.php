@@ -1323,13 +1323,10 @@ EOQ;
         'FirstName' => $db->Record['first_name'],
         'LastName'  => $db->Record['last_name'],
         'Ranking'   => $db->Record['classement'],
-        'Status'    => $db->Record['status']
+        'Status'    => $db->Record['status'],
+        'Club'      => $db->Record['club_indice']
       )
     );
-    if ($Club=='')
-    {
-      $entry['Club'] = $db->Record['club_indice'];
-    }
     if ($ExtendedInformation)
     {
       $entry['Gender']             = $db->Record['sex'];
