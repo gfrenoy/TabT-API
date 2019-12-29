@@ -1414,6 +1414,7 @@ EOQ;
         }
         if ($current_result['CompetitionType'] == 'C') {
           $current_result['MatchId'] = $result[14];
+          $current_result['MatchUniqueId'] = $result[8]; 
         }
         if (strlen($result[15]) > 0) {
           $OppRankingEvaluationEntries = array();
