@@ -1718,12 +1718,6 @@ EOQ;
  */
 function GetTournaments(stdClass $Request) {
 
-  $logger = Logger::getLogger('GetTournaments');
-  if($logger->isDebugEnabled()) {
-    $logger->debug('request is:'.json_encode($Request) );
-  }
-  
-
   // Check permissions & quota
   $permissions = _MethodAPI(10, isset($Request->Credentials) ? $Request->Credentials : (object)array());
 
@@ -1732,12 +1726,6 @@ function GetTournaments(stdClass $Request) {
   if (isset($Request->TournamentUniqueIndex))  $TournamentId    = trim($Request->TournamentUniqueIndex);
   $WithResults = isset($Request->WithResults) && $Request->WithResults ? true : false;
   $WithRegistrations = isset($Request->WithRegistrations) && $Request->WithRegistrations ? true : false;
-
-  if($logger->isDebugEnabled()) {
-    $logger->debug('WithResults='.$WithResults);  
-    $logger->debug('WithRegistrations='.$WithRegistrations);  
-  }
- 
 
   // Create database session
   $db = new DB_Session();
@@ -1904,17 +1892,10 @@ EOQ;
         if( $WithRegistrations ) {
           $SerieEntry['RegistrationCount']=0;
 
-          if($logger->isDebugEnabled()) {
-            $logger->debug('Loading registrations for tournament:'.$TournamentId);  
-          }
-
           // evaluate registration count for that serie and that tournament
           $sqlRegistrationCountForSerie="select count(*) as cnt from tournamentplayers where serie_id={$serie_id}";
 
           $count=$db_2->select_one($sqlRegistrationCountForSerie); 
-          if($logger->isDebugEnabled()) {
-            $logger->debug('Loading registrations for tournament count:'.$count);  
-          }
 
           $SerieEntry['RegistrationCount']=$count;
 
@@ -1969,9 +1950,6 @@ and tp.serie_id={$serie_id}
                 
               );
 
-              if($logger->isDebugEnabled()) {
-                $logger->debug('Loading registrations for tournament: registered='.json_encode($d));  
-              }
               $registrations[]=$d;
               
             }
@@ -2000,10 +1978,6 @@ and tp.serie_id={$serie_id}
   // Release database connection
   $db->free();
   unset($db);
-
-  if( $WithRegistrations ) {
-    $logger->debug('Tournament entry: '.json_encode($tournamentEntry));  
-  }
 
   return array('TournamentCount'   => count($res),
                'TournamentEntries' => $res);
