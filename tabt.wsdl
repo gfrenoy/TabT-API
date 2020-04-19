@@ -509,7 +509,7 @@
           <xsd:element name="ResultCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="ResultEntries" minOccurs="0" maxOccurs="unbounded" type="tns:IndividualMatchResultEntryType"/>
           <xsd:element name="RegistrationCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
-          <xsd:element name="RegistrationEntries" minOccurs="0" maxOccurs="unbounded" type="tns:TournamentRegisteredPlayerEntryType"/>
+          <xsd:element name="RegistrationEntries" minOccurs="0" maxOccurs="unbounded" type="tns:TournamentRegistrationEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="MatchSystemEntryType">
@@ -561,9 +561,9 @@
           <xsd:element name="RankingEvaluationEntries" minOccurs="0" maxOccurs="unbounded" type="tns:PlayerRankingEvaluationEntryType"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:complexType name="TournamentRegisteredPlayerEntryType">
+      <xsd:complexType name="TournamentRegistrationEntryType">
         <xsd:sequence>
-          <xsd:element name="RegistrationUniqueIndex" type="xsd:integer"/>
+          <xsd:element name="UniqueIndex" type="xsd:integer"/>
           <xsd:element name="Member" type="tns:MemberEntryType"/>
           <xsd:element name="Club" type="tns:ClubEntryType"/>
         </xsd:sequence>
