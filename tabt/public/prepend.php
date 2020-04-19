@@ -15,4 +15,7 @@ require($_PHPLIB["libdir"] . "user.inc");
 // Local configuration
 require($_PHPLIB["libdir"] . "local.inc");
 
+// Helper functions
+require($_PHPLIB["libdir"] . "helpers.php");
+
 ?>

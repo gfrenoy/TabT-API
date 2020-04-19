@@ -1,4 +1,4 @@
-
+DELETE FROM tournamentstandardrounds;
 DELETE FROM tournamentseries;
 DELETE FROM tournaments;
 DELETE FROM tournamentrounds;
@@ -81,3 +81,9 @@ DELETE FROM apiuse;
 DELETE FROM apiquota;
 DELETE FROM apicurrentquota;
 DELETE FROM active_sessions;
+
+DROP TABLE IF EXISTS tmp_general_stats;
+DROP TABLE IF EXISTS tmp_indiv_results_table;
+DROP TABLE IF EXISTS tmp_indiv_results_table_ts;
+DROP TABLE IF EXISTS tmp_resultsraw;
+DROP TABLE IF EXISTS tmp_resultsraw_ts;

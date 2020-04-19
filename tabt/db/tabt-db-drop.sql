@@ -1,4 +1,12 @@
-SET FOREIGN_KEY_CHECKS=0;
+/* Table with constraints */
+DROP TABLE IF EXISTS playercategorystatus;
+DROP TABLE IF EXISTS tournamentregularityrankings;
+
+/* Other tables */
+DROP TABLE IF EXISTS userdivisionlists;
+DROP TABLE IF EXISTS userdivisionlistitems;
+DROP TABLE IF EXISTS user_link;
+DROP TABLE IF EXISTS tournamentstandardrounds;
 DROP TABLE IF EXISTS tournamentseries;
 DROP TABLE IF EXISTS tournaments;
 DROP TABLE IF EXISTS tournamentrounds;
@@ -40,14 +48,18 @@ DROP TABLE IF EXISTS matchplayerexception;
 DROP TABLE IF EXISTS matchplayer;
 DROP TABLE IF EXISTS matchinfo;
 DROP TABLE IF EXISTS matchcomments;
+DROP TABLE IF EXISTS news;
+DROP TABLE IF EXISTS news_text;
 DROP TABLE IF EXISTS levelinfo;
 DROP TABLE IF EXISTS languages;
 DROP TABLE IF EXISTS fineseasoninfo;
+DROP TABLE IF EXISTS finedeviations;
 DROP TABLE IF EXISTS finedescription;
 DROP TABLE IF EXISTS domaines;
 DROP TABLE IF EXISTS divisionteamplayers;
 DROP TABLE IF EXISTS divisionteaminfo;
 DROP TABLE IF EXISTS divisionsynchronisation;
+DROP TABLE IF EXISTS divisionroundinfo;
 DROP TABLE IF EXISTS divisionresultslog;
 DROP TABLE IF EXISTS divisionresults;
 DROP TABLE IF EXISTS divisioninfo;
@@ -77,9 +89,9 @@ DROP TABLE IF EXISTS calendarchanges;
 DROP TABLE IF EXISTS belcategorypoints;
 DROP TABLE IF EXISTS belcategoryinfo;
 DROP TABLE IF EXISTS auth_user;
+DROP TABLE IF EXISTS auth_user_log;
 DROP TABLE IF EXISTS apiuse;
 DROP TABLE IF EXISTS apiquota;
 DROP TABLE IF EXISTS apicurrentquota;
 DROP TABLE IF EXISTS active_sessions;
 DROP TABLE IF EXISTS divisionroundinfo;
-SET FOREIGN_KEY_CHECKS=1;

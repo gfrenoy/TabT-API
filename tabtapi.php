@@ -8,7 +8,7 @@
  * @author Gaetan Frenoy <gaetan@frenoy.net>
  * @version 0.7.23
  *
- * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -184,7 +184,7 @@ function GetClubTeams(stdClass $Request) {
 
   // Extract function arguments
   $Club        = trim($Request->Club);
-  $Season      = trim($Request->Season);
+  $Season      = isset($Request->Season) ? trim($Request->Season) : '';
 
   // Prepare database session
   $db = new DB_Session();
@@ -758,7 +758,7 @@ EOQ;
           $resDetails['CommentEntries'] = array();
         }
         foreach ($comments as $comment_str) {
-          list($comment_id, $timestamp, $type, $author_id, $author_first_name, $author_last_name, $comment) = explode('§', $comment_str);
+          list($comment_id, $timestamp, $type, $author_id, $author_first_name, $author_last_name, $comment) = explode('§', $comment_str.'§§§§§§');
           $comment = str_replace(array_keys($escape_separators), array_values($escape_separators), $comment);
           $resDetails['CommentEntries'][] = array(
             'Timestamp' => $timestamp,
@@ -793,13 +793,13 @@ EOQ;
             ${"{$HomeAway}Players"}[$player_info[0]] = $resDetails["{$HomeAway}Players"]['Players'][] = array_merge(
               array(
                 'Position'    => $player_info[0],
-                'UniqueIndex' => $player_info[1],
-                'FirstName'   => $player_info[2],
-                'LastName'    => $player_info[3],
-                'Ranking'     => $player_info[4]
+                'UniqueIndex' => isset($player_info[1]) ? $player_info[1] : '',
+                'FirstName'   => isset($player_info[2]) ? $player_info[2] : '',
+                'LastName'    => isset($player_info[3]) ? $player_info[3] : '',
+                'Ranking'     => isset($player_info[4]) ? $player_info[4] : ''
               ),
-              $player_info[6] == 0 ? array('VictoryCount' => $player_info[5]) :  array(),
-              $player_info[6] > 0 ? array('IsForfeited' => true) : array()
+              isset($player_info[6]) && $player_info[6] == 0 ? array('VictoryCount' => $player_info[5]) : array(),
+              isset($player_info[6]) && $player_info[6] > 0 ? array('IsForfeited' => true) : array()
             );
           } else {
             if (!isset($resDetails["{$HomeAway}Players"]['DoubleTeams'])) {
@@ -828,7 +828,8 @@ SELECT
   MAX(mr.home_wo) as home_wo,
   MAX(mr.away_wo) as away_wo,
   (SELECT COUNT(*) FROM matchresults WHERE match_id=mr.match_id AND points<>{$GLOBALS['zero_for_set']} AND points<>-{$GLOBALS['zero_for_set']})=0 as set_only,
-  mtp.player_nb as player_nb
+  mtp.player_nb as player_nb,
+  1 as importance_order
 FROM
   matchresults as mr
   LEFT JOIN matchinfo as mi ON mi.id=mr.match_id
@@ -838,6 +839,33 @@ FROM
   LEFT JOIN matchplayer as away_mp ON away_mp.match_id=mr.match_id AND away_mp.player_nb=IFNULL(mpe.away_player_nb, mtp.away_player) LEFT JOIN playerinfo as away_pi ON away_pi.id=away_mp.away_player_id
 WHERE mr.match_id={$db->Record['MatchUniqueId']}
 GROUP BY mr.game_id
+UNION
+SELECT
+  mi.id as match_id,
+  mtp.game_nb as game_id,
+  IFNULL(mpe.home_player_nb, mtp.home_player) as home_position,
+  IF(mtp.player_nb=1, home_pi.vttl_index, home_mp.home_player_id) as home_index,
+  IFNULL(mpe.away_player_nb, mtp.away_player) as away_position,
+  IF(mtp.player_nb=1, away_pi.vttl_index, away_mp.away_player_id) as away_index,
+  NULL as scores,
+  NULL as home_sets,
+  NULL as away_sets,
+  NULL as home_wo,
+  NULL as away_wo,
+  (SELECT COUNT(*) FROM matchresults WHERE match_id=mi.id AND points<>126 AND points<>-126)=0 as set_only,
+  mtp.player_nb as player_nb,
+  2 as importance_order
+FROM
+  matchinfo as mi
+  LEFT JOIN matchtypeplayer as mtp ON mtp.match_type_id=mi.match_type_id
+  LEFT JOIN matchplayerexception mpe ON mpe.match_id=mi.id AND mpe.game_nb=mtp.game_nb
+  LEFT JOIN matchplayer as home_mp ON home_mp.match_id=mi.id AND home_mp.player_nb=IFNULL(mpe.home_player_nb, mtp.home_player) LEFT JOIN playerinfo as home_pi ON home_pi.id=home_mp.home_player_id
+  LEFT JOIN matchplayer as away_mp ON away_mp.match_id=mi.id AND away_mp.player_nb=IFNULL(mpe.away_player_nb, mtp.away_player) LEFT JOIN playerinfo as away_pi ON away_pi.id=away_mp.away_player_id
+WHERE 1
+  AND mi.id={$db->Record['MatchUniqueId']}
+ORDER BY
+  game_id ASC,
+  importance_order ASC
 EOQ;
 
       // Get double teams
@@ -852,7 +880,14 @@ EOQ;
       $db2->query($match_scores_query);
       $HomeScore = 0;
       $AwayScore = 0;
+      $ProcessedGames = array();
       while ($db2->next_record()) {
+        if (isset($ProcessedGames[$db2->Record['game_id']])) {
+          // Already processed
+          continue;
+        }
+        // Remember that position has already been processed
+        $ProcessedGames[$db2->Record['game_id']] = 1;
         // Prepare
         switch ($db2->Record['player_nb']) {
           case 1:
@@ -863,10 +898,18 @@ EOQ;
             $AwayPlayerUniqueIndex = $db2->Record['away_index'];
             break;
           case 2:
-            $HomePlayerMatchIndex  = $DoubleTeams[$db2->Record['home_index']];
-            $AwayPlayerMatchIndex  = $DoubleTeams[$db2->Record['away_index']];
-            $HomePlayerUniqueIndex = array($HomePlayers[$HomePlayerMatchIndex[0]]['UniqueIndex'], $HomePlayers[$HomePlayerMatchIndex[1]]['UniqueIndex']);
-            $AwayPlayerUniqueIndex = array($AwayPlayers[$AwayPlayerMatchIndex[0]]['UniqueIndex'], $AwayPlayers[$AwayPlayerMatchIndex[1]]['UniqueIndex']);
+            if (isset($DoubleTeams[$db2->Record['home_index']])) {
+              $HomePlayerMatchIndex  = $DoubleTeams[$db2->Record['home_index']];
+              $HomePlayerUniqueIndex = array($HomePlayers[$HomePlayerMatchIndex[0]]['UniqueIndex'], $HomePlayers[$HomePlayerMatchIndex[1]]['UniqueIndex']);
+            } else {
+              $HomePlayerMatchIndex  = $HomePlayerUniqueIndex = '';
+            }
+            if (isset($DoubleTeams[$db2->Record['away_index']])) {
+              $AwayPlayerMatchIndex  = $DoubleTeams[$db2->Record['away_index']];
+              $AwayPlayerUniqueIndex = array($AwayPlayers[$AwayPlayerMatchIndex[0]]['UniqueIndex'], $AwayPlayers[$AwayPlayerMatchIndex[1]]['UniqueIndex']);
+            } else {
+              $AwayPlayerMatchIndex = $AwayPlayerUniqueIndex = '';
+            }
             break;
         }
 
@@ -882,16 +925,16 @@ EOQ;
           $db2->Record['home_wo'] > 0 ? array('IsHomeForfeited' => true) : array('HomeSetCount' => $db2->Record['home_sets']),
           $db2->Record['away_wo'] > 0 ? array('IsAwayForfeited' => true) : array('AwaySetCount' => $db2->Record['away_sets'])
         );
-        if ($db2->Record['home_wo'] == 0 && $db2->Record['away_wo'] == 0 && !$db2->Record['set_only']) {
+        if (!is_null($db2->Record['scores']) && $db2->Record['home_wo'] == 0 && $db2->Record['away_wo'] == 0 && !$db2->Record['set_only']) {
           $IndividualMatchResult['Scores'] = $db2->Record['scores'];
         }
         $resDetails['IndividualMatchResults'][] = $IndividualMatchResult;
 
         // Calculate score
-        if ($db2->Record['home_sets'] > $db2->Record['away_sets']) {
+        if ($db2->Record['home_sets'] > $db2->Record['away_sets'] || (!$db2->Record['home_wo'] && $db2->Record['away_wo'])) {
           $HomeScore++;
         }
-        if ($db2->Record['away_sets'] > $db2->Record['home_sets']) {
+        if ($db2->Record['away_sets'] > $db2->Record['home_sets'] || ($db2->Record['home_wo'] && !$db2->Record['away_wo'])) {
           $AwayScore++;
         }
       }
@@ -1250,7 +1293,7 @@ WHERE 1
   AND pclub.season=si.id
   AND pclub.player_id=pi.id
   AND {$club_where_clause}
-  AND IFNULL({$status_field}, 'A') IN ('A','S','E','L','R','V','D','T','M')
+  AND IFNULL({$status_field}, 'A')<>'I'
   AND pclass.season=si.id
   AND pclass.player_id=pi.id
   AND pclass.category=pcat.classementcategory
@@ -1280,7 +1323,8 @@ EOQ;
       array(
         'FirstName' => $db->Record['first_name'],
         'LastName'  => $db->Record['last_name'],
-        'Ranking'   => $db->Record['classement']
+        'Ranking'   => $db->Record['classement'],
+        'Status'    => $db->Record['status']
       )
     );
     if ($Club=='')
@@ -1289,7 +1333,6 @@ EOQ;
     }
     if ($ExtendedInformation)
     {
-      $entry['Status']             = $db->Record['status'];
       $entry['Gender']             = $db->Record['sex'];
       $entry['Category']           = $db->Record['player_category'];
       if (count(array_intersect($permissions, array('admin')))>0) {
@@ -1316,7 +1359,7 @@ EOQ;
 
       // If you are not an admin, if flag 'allow_own_ranking_info' is set to true in the site configuration, one can access his/her own ranking evaluation
       // If allow_own_ranking_info gives an array, the user's club category must be in that array to be allowed
-      if (!$allow_ranking_info && isset($GLOBALS['site_info']['allow_own_ranking_info']) && $GLOBALS['site_info']['allow_own_ranking_info'] !== false && $GLOBALS['auth']->auth['unique_index'] === $entry['UniqueIndex']) {
+      if (!$allow_ranking_info && isset($GLOBALS['site_info']['allow_own_ranking_info']) && $GLOBALS['site_info']['allow_own_ranking_info'] !== false && isset($GLOBALS['auth']->auth['unique_index']) && $GLOBALS['auth']->auth['unique_index'] === $entry['UniqueIndex']) {
         if ($GLOBALS['site_info']['allow_own_ranking_info'] === true) {
           $allow_ranking_info = true;
         } elseif (is_array($GLOBALS['site_info']['allow_own_ranking_info']) && in_array($GLOBALS['auth']->auth['club_category'], $GLOBALS['site_info']['allow_own_ranking_info'])) {

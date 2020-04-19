@@ -6,9 +6,9 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.22
+ * @version 0.7.23
  *
- * Copyright (C) 2007-2018 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -275,6 +275,9 @@ function _EndAPI() {
   // Prepare database session
   $db = new DB_Session();
 
+  // Remember site id
+  $site_id = _GetSiteId();
+
   // Record usage
   // DevNote: we should track the real CPU usage instead of elapsed time
   $time = 1 + abs(round(1000 * (microtime(true) - $GLOBALS['api_starttime'])));
@@ -288,14 +291,16 @@ function _EndAPI() {
   }
 
   $db->select_one("LOCK TABLES apicurrentquota WRITE");
-  if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}") == 0) {
+  if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']} AND site_id={$site_id}") == 0) {
     // Very first call
-    $db->select_one("INSERT INTO apicurrentquota (id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
+    // DevNote: to avoid issue in redundant mode, make sure we overwrite any existing entry before adding a new one
+    $db->select_one("DELETE FROM apicurrentquota WHERE id={$GLOBALS['api_caller']} AND site_id={$site_id};");
+    $db->select_one("INSERT INTO apicurrentquota (id, site_id, lastused, consumed, quota) VALUES ({$GLOBALS['api_caller']}, {$site_id}, {$GLOBALS['api_starttime']}, {$time}, {$time});");
   } else {
     // Returning user
     $GLOBALS['api_consumed'] += $time;
     $GLOBALS['api_quota']     = $GLOBALS['api_remaining_quota'] + $time;
-    $db->select_one("UPDATE apicurrentquota SET lastused={$GLOBALS['api_starttime']}, consumed={$GLOBALS['api_consumed']}, quota={$GLOBALS['api_quota']} WHERE id={$GLOBALS['api_caller']}");
+    $db->select_one("UPDATE apicurrentquota SET lastused={$GLOBALS['api_starttime']}, consumed={$GLOBALS['api_consumed']}, quota={$GLOBALS['api_quota']} WHERE id={$GLOBALS['api_caller']} AND site_id={$site_id}");
   }
   $db->select_one("UNLOCK TABLES");
 
@@ -313,7 +318,7 @@ function _EndAPI() {
  */
 function _GetQuota() {
   $db = new DB_Session();
-  $a = $db->select_one_array("SELECT consumed, quota, GREATEST(0, quota - 200*({$GLOBALS['api_starttime']}-lastused)) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']}");
+  $a = $db->select_one_array("SELECT consumed, quota, GREATEST(0, quota - 200*({$GLOBALS['api_starttime']}-lastused)) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']} AND site_id=" . _GetSiteId());
   if (is_null($a)) {
     $a = array(0, 0, 0);
   }
@@ -392,6 +397,16 @@ function _GetClubInfo($Season, $Club) {
   unset($db);
 
   return $response;
+}
+
+/**
+ * Returns the unique identifier of the site running this application
+ * (only used in case of replication of the same database on several sites)
+ *
+ *  @return int Site ID, if not defined, returns 1
+ */
+function _GetSiteId() {
+  return isset($GLOBALS['site_info']['site_id']) && is_numeric($GLOBALS['site_info']['site_id']) && intval($GLOBALS['site_info']['site_id']) > 0 ? intval($GLOBALS['site_info']['site_id']) : 1;
 }
 
 ?>
