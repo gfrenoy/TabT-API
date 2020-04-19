@@ -1766,6 +1766,7 @@ function GetTournaments(stdClass $Request) {
   if (isset($Request->Season))                 $Season          = trim($Request->Season);
   if (isset($Request->TournamentUniqueIndex))  $TournamentId    = trim($Request->TournamentUniqueIndex);
   $WithResults = isset($Request->WithResults) && $Request->WithResults ? true : false;
+  $WithRegistrations = isset($Request->WithRegistrations) && $Request->WithRegistrations ? true : false;
 
   // Create database session
   $db = new DB_Session();
@@ -1802,7 +1803,12 @@ function GetTournaments(stdClass $Request) {
 
   // Tournament results can only be called by tournament
   if ($WithResults && !isset($TournamentId)) {
-    throw new SoapFault('51', "TournamentUniqueIndex must be specified to get tournament results.");
+    throw new SoapFault('56', "TournamentUniqueIndex must be specified to get tournament results.");
+  }
+
+  // Tournament registrations can only be called by tournament
+  if ($WithRegistrations && !isset($TournamentId)) {
+    throw new SoapFault('57', "TournamentUniqueIndex must be specified to get tournament registrations.");
   }
 
   // Prepare additional clauses to extract results
@@ -1903,6 +1909,13 @@ EOQ;
       $series = explode('µ', $db->Record['tournament_series']);
       $tournamentEntry['SerieCount'] = count($series);
       $tournamentEntry['SerieEntries'] = array();
+
+      unset($db2);
+      if ($WithRegistrations) {
+        $db2 = new DB_Session();
+        $db2->Halt_On_Error = 'no';
+      }
+
       foreach ($series as $serie) {
         list($serie_id, $serie_name) = explode('§', $serie);
         $SerieEntry = array(
@@ -1915,7 +1928,74 @@ EOQ;
             $SerieEntry['ResultEntries'] = $results[$serie_id];
           }
         }
+
+        // Adding registration infos for each serie
+        if ($WithRegistrations) {
+          $SerieEntry['RegistrationCount'] = 0;
+
+          // Evaluate registration count for that serie and that tournament
+          $SerieEntry['RegistrationCount'] = $db2->select_one("SELECT count(*) FROM tournamentplayers WHERE serie_id={$serie_id}");
+
+          // Identify each registration for that serie and that tournament (if any)
+          if ($count > 0) {
+            $registrations = array();
+
+            $q2 = <<<EOQ
+SELET
+  tp.id AS RegistrationUniqueIndex,
+  pi.first_name AS PlayerFirstName,
+  pi.last_name AS PlayerLastName,
+  pi.vttl_index AS PlayerUniqueIndex,
+  ci.name AS PlayerRanking,
+  cb.id AS ClubUniqueIndex, cb.name AS ClubName, cb.short_name AS ClubShortName, cb.indice AS ClubIndice, 
+  cc.id AS ClubCategory, cc.name AS ClubCategoryName
+FROM
+  tournamentplayers tp
+  INNER JOIN playerinfo pi ON pi.id=tp.player_id
+  INNER JOIN tournaments t ON t.id=tp.tournament_id
+  INNER JOIN tournamentseries s ON s.id=tp.serie_id
+  INNER JOIN playerclassement pc ON pc.season=t.season and pc.player_id=tp.player_id and pc.category=s.classementcategory
+  INNER JOIN classementinfo ci ON ci.id=pc.classement_id and ci.category=s.classementcategory
+  INNER JOIN playerclub pcb ON pcb.player_id=tp.player_id and pcb.season=t.season
+  INNER JOIN clubs cb ON cb.id=pcb.club_id
+  INNER JOIN clubcategories cc ON cc.id=cb.category
+WHERE 1
+  AND tp.tournament_id={$TournamentId}
+  AND tp.serie_id={$serie_id}
+EOQ;
+            $db2->query($q2);
+
+            while ($db2->next_record()) {
+              $registrations[] = array(
+                'UniqueIndex'=> $db2->Record['RegistrationUniqueIndex'],
+
+                'Member' => array( 
+                    'UniqueIndex'=> $db2->Record['PlayerUniqueIndex'],
+                    'FirstName'  => $db2->Record['PlayerFirstName'],
+                    'LastName'   => $db2->Record['PlayerLastName'],
+                    'Ranking'    => $db2->Record['PlayerRanking']
+                  ),
+                'Club' => array(
+                    'UniqueIndex'  => $db2->Record['ClubUniqueIndex'],
+                    'LongName'     => $db2->Record['ClubName'],
+                    'Name'         => $db2->Record['ClubShortName'],
+                    'Indice'       => $db2->Record['ClubIndice'],
+                    'Category'     => $db2->Record['ClubCategory'],
+                    'CategoryName' => $db2->Record['ClubCategoryName']
+                )
+              );
+            }
+            $SerieEntry['RegistrationEntries'] = $registrations;
+          }
+        }
+
         $tournamentEntry['SerieEntries'][] = $SerieEntry;
+      }
+
+      if ($db2 != null) {
+        // Release database connection
+        $db2->free();
+        unset($db2);
       }
     } else {
       $tournamentEntry['SerieCount'] = 0;

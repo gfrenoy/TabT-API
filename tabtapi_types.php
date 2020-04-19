@@ -2201,6 +2201,15 @@ class GetTournamentsRequest {
    */
   public $WithResults;
 
+  /**
+   * Returns registrations of the considered tournament.
+   *
+   * This parameter is optional.  Default value is false.
+   * If set to true, a tournament must be selected using $TournamentUniqueIndex.
+   *
+   * @b type:  boolean
+   */
+  public $WithRegistrations;
 }
 
 /**
@@ -2333,6 +2342,25 @@ class TournamentSerieEntryType {
     * @see IndividualMatchResultEntryType
     */
   public $ResultEntries;
+
+  /**
+    * The number of registrations for this serie
+    *
+    * This parameter is optional and only returned if WithRegistrations has been set (see ::GetTournaments).
+    *
+    * 
+    */
+  public $RegistrationCount;
+
+  /**
+    * Detailed registrations within a tournament serie.
+    *
+    * This parameter is optional and only returned if WithRegistrations has been set (see ::GetTournaments) 
+    * and if some registrations are available for that serie.
+    *
+    * 
+    */
+  public $RegistrationEntries;
 }
 
 /**
