@@ -26,7 +26,6 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-
 // Load main configuration file
 if (!@include_once('config.inc')) {
   print('TabT not correctly installed on server.  Configuration file is missing.');
