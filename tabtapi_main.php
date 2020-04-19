@@ -33,13 +33,6 @@ if (!@include_once('config.inc')) {
   exit;
 }
 
-$env = isset($GLOBALS['site_info']['environment']) ? $GLOBALS['site_info']['environment'] : 'pr';
-/* GKA: A more robust solution should be found
-if( $env !== 'pr') {
-  ini_set("soap.wsdl_cache_enabled","0");
-}
-*/
-
 // Check we have the required information to start
 if (!isset($GLOBALS['site_info']['database'])) {
   // No, try to load some more config from WWW application
