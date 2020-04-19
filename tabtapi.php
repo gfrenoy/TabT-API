@@ -8,7 +8,7 @@
  * @author Gaetan Frenoy <gaetan@frenoy.net>
  * @version 0.7.23
  *
- * Copyright (C) 2007-2019 Gaëtan Frenoy (gaetan@frenoy.net)
+ * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -930,10 +930,10 @@ EOQ;
         $resDetails['IndividualMatchResults'][] = $IndividualMatchResult;
 
         // Calculate score
-        if ($db2->Record['home_sets'] > $db2->Record['away_sets']) {
+        if ($db2->Record['home_sets'] > $db2->Record['away_sets'] || (!$db2->Record['home_wo'] && $db2->Record['away_wo'])) {
           $HomeScore++;
         }
-        if ($db2->Record['away_sets'] > $db2->Record['home_sets']) {
+        if ($db2->Record['away_sets'] > $db2->Record['home_sets'] || ($db2->Record['home_wo'] && !$db2->Record['away_wo'])) {
           $AwayScore++;
         }
       }
