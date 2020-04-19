@@ -94,4 +94,3 @@ DROP TABLE IF EXISTS apiuse;
 DROP TABLE IF EXISTS apiquota;
 DROP TABLE IF EXISTS apicurrentquota;
 DROP TABLE IF EXISTS active_sessions;
-DROP TABLE IF EXISTS divisionroundinfo;
