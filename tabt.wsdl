@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- TabT API (http://api.frenoy.net/TabT) v#VERSION# (#DATE#) for database "#DATABASE#"
-     Copyright 2007-2019, Gaëtan Frenoy <gaetan@frenoy.net> -->
+     Copyright 2007-2020, Gaëtan Frenoy <gaetan@frenoy.net> -->
 <wsdl:definitions
   targetNamespace="http://api.frenoy.net/TabTAPI"
   xmlns:tns="http://api.frenoy.net/TabTAPI"

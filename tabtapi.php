@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.23
+ * @version 0.7.24
  *
  * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  *
