@@ -410,7 +410,7 @@
           <xsd:element name="LastName" type="xsd:string"/>
           <xsd:element name="Ranking" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="Status" minOccurs="0" maxOccurs="1" type="xsd:string"/>
-          <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="Club" type="xsd:string"/>
           <xsd:element name="Gender" minOccurs="0" maxOccurs="1" type="tns:GenderType"/>
           <xsd:element name="Category" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="BirthDate" minOccurs="0" maxOccurs="1" type="xsd:date"/>
@@ -556,6 +556,7 @@
           <xsd:element name="CompetitionType" type="tns:CompetitionType"/>
           <xsd:element name="Club" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="MatchId" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          <xsd:element name="MatchUniqueId" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="TournamentName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="TournamentSerieName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           <xsd:element name="TeamName" minOccurs="0" maxOccurs="1" type="xsd:string"/>

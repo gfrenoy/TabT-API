@@ -1331,13 +1331,10 @@ EOQ;
         'FirstName' => $db->Record['first_name'],
         'LastName'  => $db->Record['last_name'],
         'Ranking'   => $db->Record['classement'],
-        'Status'    => $db->Record['status']
+        'Status'    => $db->Record['status'],
+        'Club'      => $db->Record['club_indice']
       )
     );
-    if ($Club=='')
-    {
-      $entry['Club'] = $db->Record['club_indice'];
-    }
     if ($ExtendedInformation)
     {
       $entry['Gender']             = $db->Record['sex'];
@@ -1425,6 +1422,7 @@ EOQ;
         }
         if ($current_result['CompetitionType'] == 'C') {
           $current_result['MatchId'] = $result[14];
+          $current_result['MatchUniqueId'] = $result[8]; 
         }
         if (strlen($result[15]) > 0) {
           $OppRankingEvaluationEntries = array();
