@@ -5,7 +5,7 @@
  * @brief Here are all types used by TabT API functions
  *
  * @author Gaëtan Frenoy <gaetan@frenoy.net>
- * @version 0.7.24
+ * @version 0.7.25
  *
  * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  */

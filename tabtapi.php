@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.24
+ * @version 0.7.25
  *
  * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  *
@@ -84,7 +84,7 @@ if (!include_once('tabtapi_types.php')) {
  * @param[in] $Request TestRequest
  * @return TestResponse
  * @see TestRequest, TestResponse
- * @version 0.7.16
+ * @version 0.7.25
  * @ingroup TabTAPIfunctions
  */
 function Test(stdClass $Request) {
@@ -99,6 +99,14 @@ function Test(stdClass $Request) {
                'ConsumedTicks'  => intval($GLOBALS['api_consumed']),
                'CurrentQuota'   => intval($GLOBALS['api_remaining_quota']),
                'AllowedQuota'   => intval($GLOBALS['api_quota_limit']));
+
+  if (count(array_intersect($permissions, array('admin'))) > 0) {
+    $res['PhpVersion'] = phpversion();
+    $db = new DB_Session();
+    $res['DbVersion'] = $db->select_one('select version()');
+    $db->free();
+    unset($db);
+  }
 
   return $res;
 }
@@ -308,7 +316,7 @@ function GetDivisionRanking(stdClass $Request) {
     $q = "SELECT name FROM calendarweekname WHERE calendar_id={$calendar_id} and week={$week};";
     $DatabaseWeekName = $db->select_one($q);
   } else {
-    $WeekName = mysql_real_escape_string(ltrim($WeekName, '0'));
+    $WeekName = DB_Sql::db_escape(ltrim($WeekName, '0'));
     $q = "SELECT week, name FROM calendarweekname WHERE calendar_id={$calendar_id} and TRIM(LEADING '0' FROM name) LIKE '{$WeekName}';";
     list($week, $DatabaseWeekName) = $db->select_one_array($q);
     if (!is_numeric($week) || !($week > -1)) {
@@ -398,7 +406,7 @@ function GetMatches(stdClass $Request) {
   if (isset($Request->YearDateFrom)) $YearDateFrom = strtotime($Request->YearDateFrom);
   if (isset($Request->YearDateTo))   $YearDateTo   = strtotime($Request->YearDateTo);
   $WithDetails      = isset($Request->WithDetails) && $Request->WithDetails ? true : false;
-  $MatchId          = isset($Request->MatchId) ? mysql_real_escape_string(trim($Request->MatchId)) : '';
+  $MatchId          = isset($Request->MatchId) ? DB_Sql::db_escape(trim($Request->MatchId)) : '';
   $MatchUniqueId    = isset($Request->MatchUniqueId) && is_numeric($Request->MatchUniqueId) && $Request->MatchUniqueId > 0 ? intval(trim($Request->MatchUniqueId)) : 0;
 
   // Create database session
@@ -465,7 +473,7 @@ function GetMatches(stdClass $Request) {
       throw new SoapFault('12', "Parameter 'Club' has to be given if parameter 'Team' is set.");
   }
   if ($Team != '') {
-    $Team = mysql_real_escape_string($Team);
+    $Team = DB_Sql::db_escape($Team);
     if (is_numeric($DivisionId)) {
       if ($db->select_one("SELECT COUNT(*) FROM divisionteaminfo AS dti WHERE dti.div_id={$DivisionId} AND dti.club_id={$ClubId} AND dti.indice='{$Team}';") == 0) {
         throw new SoapFault('11', "Club [{$Club}] has no team [{$Team}] in division [{$DivisionId}]");
@@ -489,7 +497,7 @@ function GetMatches(stdClass $Request) {
 
   // Check week name
   if ($WeekName != '') {
-    $WeekName = mysql_real_escape_string(ltrim($WeekName, '0'));
+    $WeekName = DB_Sql::db_escape(ltrim($WeekName, '0'));
     $q = "SELECT week, name FROM calendarweekname WHERE TRIM(LEADING '0' FROM name) LIKE '{$WeekName}';";
     list($week, $DatabaseWeekName) = $db->select_one_array($q);
     if (!is_numeric($week) || !($week > -1)) {
@@ -1159,7 +1167,7 @@ function GetMembers(stdClass $Request) {
   $name_where_clause = '1';
   if (isset($NameSearch))
   {
-    $NameSearch = mysql_real_escape_string($NameSearch);
+    $NameSearch = DB_Sql::db_escape($NameSearch);
     $name_where_clause = "(CONCAT(pi.first_name, ' ', pi.last_name) LIKE '%{$NameSearch}%' OR CONCAT(pi.last_name, ' ', pi.first_name) LIKE '%{$NameSearch}%')";
   }
 
@@ -1937,11 +1945,11 @@ EOQ;
           $SerieEntry['RegistrationCount'] = $db2->select_one("SELECT count(*) FROM tournamentplayers WHERE serie_id={$serie_id}");
 
           // Identify each registration for that serie and that tournament (if any)
-          if ($count > 0) {
+          if ($SerieEntry['RegistrationCount'] > 0) {
             $registrations = array();
 
             $q2 = <<<EOQ
-SELET
+SELECT
   tp.id AS RegistrationUniqueIndex,
   pi.first_name AS PlayerFirstName,
   pi.last_name AS PlayerLastName,

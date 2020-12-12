@@ -155,6 +155,8 @@
             <xsd:element name="ConsumedTicks" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
             <xsd:element name="CurrentQuota" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
             <xsd:element name="AllowedQuota" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+            <xsd:element name="PhpVersion" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="DbVersion" minOccurs="0" maxOccurs="1" type="xsd:string"/>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -444,7 +446,7 @@
           <xsd:element name="LongName" type="xsd:string"/>
           <xsd:element name="Category" type="xsd:integer"/>
           <xsd:element name="CategoryName" type="xsd:string"/>
-          <xsd:element name="VenueCount" type="xsd:integer"/>
+          <xsd:element name="VenueCount" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
           <xsd:element name="VenueEntries" minOccurs="0" maxOccurs="unbounded" type="tns:VenueEntryType"/>
         </xsd:sequence>
       </xsd:complexType>

@@ -6,7 +6,7 @@
  * by TabT, the table tennis information manager.
  *
  * @author Gaetan Frenoy <gaetan@frenoy.net>
- * @version 0.7.24
+ * @version 0.7.25
  *
  * Copyright (C) 2007-2020 Gaëtan Frenoy (gaetan@frenoy.net)
  *
@@ -25,11 +25,10 @@
 */
 
 function _GetPermissions($Credentials) {
-  // Establish a dummy connection to make sure "mysql_real_escape_string" works as expected
   $db = new DB_Session();
-  $db->query('SELECT COUNT(*) FROM auth_user');
-  $Account    = isset($Credentials->Account) ? mysql_real_escape_string($Credentials->Account, $db->Link_ID) : '';
-  $Password   = isset($Credentials->Password) ? mysql_real_escape_string($Credentials->Password, $db->Link_ID) : '';
+  
+  $Account    = isset($Credentials->Account) ? $db->escape($Credentials->Account) : '';
+  $Password   = isset($Credentials->Password) ? $db->escape($Credentials->Password) : '';
   $OnBehalfOf = isset($Credentials->OnBehalfOf) && is_numeric($Credentials->OnBehalfOf)? intval($Credentials->OnBehalfOf) : 0;
 
   if ($Account != '') {
@@ -189,6 +188,7 @@ EOQ;
     }
   }
 
+  $db->free();
   unset($db);
 
   return !isset($permissions) || $permissions==-1 ? array() : explode(',', $permissions);
@@ -290,7 +290,7 @@ function _EndAPI() {
     }
   }
 
-  $db->select_one("LOCK TABLES apicurrentquota WRITE");
+  $db->execute("LOCK TABLES apicurrentquota WRITE");
   if ($GLOBALS['api_consumed'] == 0 && $db->select_one("SELECT COUNT(*) FROM apicurrentquota WHERE id={$GLOBALS['api_caller']} AND site_id={$site_id}") == 0) {
     // Very first call
     // DevNote: to avoid issue in redundant mode, make sure we overwrite any existing entry before adding a new one
@@ -302,7 +302,7 @@ function _EndAPI() {
     $GLOBALS['api_quota']     = $GLOBALS['api_remaining_quota'] + $time;
     $db->select_one("UPDATE apicurrentquota SET lastused={$GLOBALS['api_starttime']}, consumed={$GLOBALS['api_consumed']}, quota={$GLOBALS['api_quota']} WHERE id={$GLOBALS['api_caller']} AND site_id={$site_id}");
   }
-  $db->select_one("UNLOCK TABLES");
+  $db->execute("UNLOCK TABLES");
 
   unset($db);
 
