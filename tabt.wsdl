@@ -567,6 +567,7 @@
       <xsd:complexType name="TournamentRegistrationEntryType">
         <xsd:sequence>
           <xsd:element name="UniqueIndex" type="xsd:integer"/>
+          <xsd:element name="RegistrationDate" type="xsd:dateTime"/>
           <xsd:element name="Member" type="tns:MemberEntryType"/>
           <xsd:element name="Club" type="tns:ClubEntryType"/>
         </xsd:sequence>
