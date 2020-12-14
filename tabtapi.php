@@ -1949,6 +1949,7 @@ EOQ;
             $q2 = <<<EOQ
 SELECT
   tp.id AS RegistrationUniqueIndex,
+  tp.registration_date as registrationDate,
   pi.first_name AS PlayerFirstName,
   pi.last_name AS PlayerLastName,
   pi.vttl_index AS PlayerUniqueIndex,
@@ -1974,6 +1975,7 @@ EOQ;
             while ($db2->next_record()) {
               $registrations[] = array(
                 'UniqueIndex'=> $db2->Record['RegistrationUniqueIndex'],
+                'RegistrationDate'=> $db2->Record['registrationDate'],
 
                 'Member' => array( 
                     'UniqueIndex'=> $db2->Record['PlayerUniqueIndex'],
