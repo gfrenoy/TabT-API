@@ -1400,46 +1400,50 @@ EOQ;
       }
       if (count($entry['Address'])==0) unset($entry['Address']);
     }
-    if ($WithResults && isset($db->Record['results'])) {
-      $results = array();
-      foreach (explode('µ', $db->Record['results']) as $result_string) {
-        $result = explode('§', $result_string);
-        $current_result = array(
-          'Date'             => $result[0],
-          'UniqueIndex'      => $result[1],
-          'FirstName'        => $result[2],
-          'LastName'         => $result[3],
-          'Ranking'          => $result[4],
-          'Result'           => $result[5],
-          'SetFor'           => $result[6],
-          'SetAgainst'       => $result[7],
-          'CompetitionType'  => $result[10],
-          'Club'             => $result[11]
-        );
-        if ($current_result['CompetitionType'] == 'T') {
-          $current_result['TournamentName'] = $result[12];
-          $current_result['TournamentSerieName'] = $result[13];
-        }
-        if ($current_result['CompetitionType'] == 'C') {
-          $current_result['MatchId'] = $result[14];
-          $current_result['MatchUniqueId'] = $result[8]; 
-        }
-        if (strlen($result[15]) > 0) {
-          $OppRankingEvaluationEntries = array();
-          foreach (explode('|', $result[15]) as $OppEvaluation) {
-            list($OppEvaluationType, $OppEvaluationValue) = explode('=', $OppEvaluation);
-            $OppRankingEvaluationEntries[] = array(
-              'EvaluationType'  => $OppEvaluationType,
-              'EvaluationValue' => $OppEvaluationValue
-            );
+    if ($WithResults) {
+      if (isset($db->Record['results'])){
+        $results = array();
+        foreach (explode('µ', $db->Record['results']) as $result_string) {
+          $result = explode('§', $result_string);
+          $current_result = array(
+            'Date'             => $result[0],
+            'UniqueIndex'      => $result[1],
+            'FirstName'        => $result[2],
+            'LastName'         => $result[3],
+            'Ranking'          => $result[4],
+            'Result'           => $result[5],
+            'SetFor'           => $result[6],
+            'SetAgainst'       => $result[7],
+            'CompetitionType'  => $result[10],
+            'Club'             => $result[11]
+          );
+          if ($current_result['CompetitionType'] == 'T') {
+            $current_result['TournamentName'] = $result[12];
+            $current_result['TournamentSerieName'] = $result[13];
           }
-          $current_result['RankingEvaluationCount']   = count($OppRankingEvaluationEntries);
-          $current_result['RankingEvaluationEntries'] = $OppRankingEvaluationEntries;
+          if ($current_result['CompetitionType'] == 'C') {
+            $current_result['MatchId'] = $result[14];
+            $current_result['MatchUniqueId'] = $result[8]; 
+          }
+          if (strlen($result[15]) > 0) {
+            $OppRankingEvaluationEntries = array();
+            foreach (explode('|', $result[15]) as $OppEvaluation) {
+              list($OppEvaluationType, $OppEvaluationValue) = explode('=', $OppEvaluation);
+              $OppRankingEvaluationEntries[] = array(
+                'EvaluationType'  => $OppEvaluationType,
+                'EvaluationValue' => $OppEvaluationValue
+              );
+            }
+            $current_result['RankingEvaluationCount']   = count($OppRankingEvaluationEntries);
+            $current_result['RankingEvaluationEntries'] = $OppRankingEvaluationEntries;
+          }
+          $results[] = $current_result;
         }
-        $results[] = $current_result;
+        $entry['ResultCount'] = count($results);
+        $entry['ResultEntries'] = $results;
+      } else {
+        $entry['ResultCount'] = 0;
       }
-      $entry['ResultCount'] = count($results);
-      $entry['ResultEntries'] = $results;
     }
     $res[] = $entry;
   }
